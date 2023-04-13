@@ -5,6 +5,12 @@ pub struct World {
     pub chunks: HashMap<i64, Chunk>
 }
 
+impl Default for World {
+    fn default() -> World {
+        World {chunks: Default::default()}
+    }
+}
+
 #[derive(Debug)]
 pub struct Chunk {
     pub sections: HashMap<i8, ChunkSection>
