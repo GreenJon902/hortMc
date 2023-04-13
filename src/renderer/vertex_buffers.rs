@@ -10,7 +10,7 @@ pub struct VertexBuffers {
 }
 
 impl VertexBuffers {
-    pub fn new(vertices: Vec<f32>, indices: Vec<u32>) -> VertexBuffers {
+    pub fn new(vertices: Vec<f32>, indices: Vec<u32>, layout_sizes: Vec<i32>) -> VertexBuffers {
 
         // The thing that puts it on the gpu?
         let mut vbo: GLuint = 0;
@@ -29,16 +29,25 @@ impl VertexBuffers {
         let mut vao: GLuint = 0;
         sgl::GenVertexArrays(1, &mut vao);
         sgl::BindVertexArray(vao);
-        sgl::BindBuffer(gl::ARRAY_BUFFER, vbo);
-        sgl::EnableVertexAttribArray(0); // this is "layout (location = 0)" in vertex shader
-        sgl::VertexAttribPointer(
-            0,         // index of the generic vertex attribute ("layout (location = 0)")
-            3,         // the number of components per generic vertex attribute
-            gl::FLOAT, // data type
-            gl::FALSE, // normalized (int-to-float conversion)
-            (3 * std::mem::size_of::<f32>()) as gl::types::GLint, // stride (byte offset between consecutive attributes)
-            std::ptr::null(),                                     // offset of the first component
-        );
+
+        let vertex_size: i32 = layout_sizes.iter().sum();
+        let mut offset: i32 = 0;
+        for (n, layout_size) in layout_sizes.iter().enumerate() {
+            println!("{} {} {}", n, layout_size, vertex_size);
+
+            sgl::BindBuffer(gl::ARRAY_BUFFER, vbo);
+            sgl::EnableVertexAttribArray(n as GLuint); // this is "layout (location = 0)" in vertex shader
+            sgl::VertexAttribPointer(
+                n as GLuint,         // index of the generic vertex attribute ("layout (location = 0)")
+                *layout_size,         // the number of components per generic vertex attribute
+                gl::FLOAT, // data type
+                gl::FALSE, // normalized (int-to-float conversion)
+                (vertex_size as usize * std::mem::size_of::<f32>()) as gl::types::GLint, // stride (byte offset between consecutive attributes)
+                (offset as usize * std::mem::size_of::<f32>()) as *const c_void,    // offset of the first component
+            );
+            offset += layout_size;
+        }
+
         sgl::BindBuffer(gl::ARRAY_BUFFER, 0);
         sgl::BindVertexArray(0);
 

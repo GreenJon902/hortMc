@@ -8,5 +8,5 @@ out vec4 Color;
 
 void main()
 {
-    Color = vec4(IN.Color.xyz, 1.0f);
+    Color = vec4(IN.Color.rgb, 1.0f);
 }

@@ -64,16 +64,20 @@ impl RayTracer {
 
     fn create_vertex_buffers() -> VertexBuffers {
         let vertices: Vec<f32> = vec![
-            0.5,  0.5, 0.0, // top right
-            0.5, -0.5, 0.0, // bottom right
-            -0.5, -0.5, 0.0, // bottom left
-            -0.5,  0.5, 0.0,  // top left
+          // Position   Color
+             0.5,  0.5, 1., 0., 0., // top right
+             0.5, -0.5, 0., 1., 0., // bottom right
+            -0.5, -0.5, 0., 0., 1., // bottom left
+            -0.5,  0.5, 1., 1., 1., // top left
         ];
         let indices: Vec<u32> = vec![
             0, 1, 2,
             2, 3, 0
         ];
-        return VertexBuffers::new(vertices, indices)
+        let layout_sizes: Vec<i32> = vec![
+            2, 3  // Position, Color
+        ];
+        return VertexBuffers::new(vertices, indices, layout_sizes);
     }
 
     pub fn draw(&self) {
