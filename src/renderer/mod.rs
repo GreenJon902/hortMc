@@ -2,15 +2,19 @@ mod shader_utils;
 #[allow(non_snake_case)]
 mod sgl;
 pub mod ray_tracer;
+pub mod vertex_buffers;
 
 extern crate gl;
 extern crate sdl2;
 
+use std::ffi::c_void;
+use std::ptr;
+use gl::types::GLsizei;
 use sdl2::Sdl;
 use sdl2::video::{GLContext, Window};
-use std::ptr;
-use gl::types::GLuint;
+use crate::renderer::ray_tracer::RayTracer;
 use crate::renderer::shader_utils::program::Program;
+use crate::renderer::vertex_buffers::VertexBuffers;
 
 pub struct Renderer {
     pub name: &'static str,
@@ -48,18 +52,8 @@ impl Renderer {
 }
 
 
-pub(crate) fn run(renderer: Renderer, shader_program: Program, vao: GLuint) {
-
-
-
-    // set up shared state for window
-
-    unsafe {
-        gl::Viewport(0, 0, 900, 700);
-        gl::ClearColor(0.3, 0.3, 0.5, 1.0);
-    }
-
-    // main loop
+pub(crate) fn run(renderer: Renderer, ray_tracer: RayTracer) {
+    sgl::Viewport(0, 0, renderer.width as GLsizei, renderer.height as GLsizei);
 
     let mut event_pump = renderer.sdl.event_pump().unwrap();
     'main: loop {
@@ -70,23 +64,8 @@ pub(crate) fn run(renderer: Renderer, shader_program: Program, vao: GLuint) {
             }
         }
 
-        unsafe {
-            gl::Clear(gl::COLOR_BUFFER_BIT);
-        }
-
-        // draw triangle
-
-        shader_program.set_used();
-        unsafe {
-            gl::BindVertexArray(vao);
-            gl::DrawElements(
-                gl::TRIANGLES, // mode
-                6,
-                gl::UNSIGNED_INT,
-                ptr::null()
-            );
-        }
-
+        sgl::Clear(gl::COLOR_BUFFER_BIT);
+        ray_tracer.draw();
         renderer.window.gl_swap_window();
     }
 }

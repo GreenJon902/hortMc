@@ -1,5 +1,5 @@
 use std::ffi::{c_char, c_void};
-use gl::types::{GLboolean, GLchar, GLenum, GLint, GLsizei, GLsizeiptr, GLuint};
+use gl::types::{GLbitfield, GLboolean, GLchar, GLenum, GLint, GLsizei, GLsizeiptr, GLuint};
 use crate::renderer::shader_utils::shader::Shader;
 
 
@@ -126,5 +126,29 @@ pub fn VertexAttribPointer(index: GLuint, size: GLint, type_: GLenum, normalized
 pub fn EnableVertexAttribArray(index: GLuint) {
     unsafe {
         gl::EnableVertexAttribArray(index);
+    }
+}
+
+pub fn DrawElements(mode: GLenum, count: GLsizei, type_: GLenum, indices: *const c_void) {
+    unsafe {
+        gl::DrawElements(mode, count, type_, indices);
+    }
+}
+
+pub fn Viewport(x: GLint, y: GLint, width: GLsizei, height: GLsizei) {
+    unsafe {
+        gl::Viewport(x, y, width, height);
+    }
+}
+
+pub fn Clear(mask: GLbitfield) {
+    unsafe {
+        gl::Clear(mask);
+    }
+}
+
+pub fn CreateShader(type_: GLenum) -> GLuint {
+    unsafe {
+        return gl::CreateShader(type_);
     }
 }
