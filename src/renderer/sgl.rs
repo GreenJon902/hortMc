@@ -1,5 +1,5 @@
-use std::ffi::c_char;
-use gl::types::{GLchar, GLenum, GLint, GLsizei, GLuint};
+use std::ffi::{c_char, c_void};
+use gl::types::{GLboolean, GLchar, GLenum, GLint, GLsizei, GLsizeiptr, GLuint};
 use crate::renderer::shader_utils::shader::Shader;
 
 
@@ -84,5 +84,47 @@ pub fn GetShaderiv(id: GLuint, pname: GLenum, params: *mut GLint) {
 pub fn GetShaderInfoLog(shader: GLuint, buf_size: GLsizei, length: *mut GLsizei, info_log: *mut GLchar) {
     unsafe {
         gl::GetShaderInfoLog(shader, buf_size, length, info_log);
+    }
+}
+
+pub fn GenVertexArrays(n: GLint, arrays: *mut GLuint) {
+    unsafe {
+        gl::GenVertexArrays(n, arrays);
+    }
+}
+
+pub fn GenBuffers(size: GLsizei, buffers: *mut GLuint) {
+    unsafe {
+        gl::GenBuffers(size, buffers);
+    }
+}
+
+pub fn BindVertexArray(array: GLuint) {
+    unsafe {
+        gl::BindVertexArray(array);
+    }
+}
+
+pub fn BindBuffer(target: GLenum, buffer: GLuint) {
+    unsafe {
+        gl::BindBuffer(target, buffer);
+    }
+}
+
+pub fn BufferData(target: GLenum, size: usize, data: *const c_void, usage: GLenum) {
+    unsafe {
+        gl::BufferData(target, size as GLsizeiptr, data, usage);
+    }
+}
+
+pub fn VertexAttribPointer(index: GLuint, size: GLint, type_: GLenum, normalized: GLboolean, stride: GLsizei, pointer: *const c_void) {
+    unsafe {
+        gl::VertexAttribPointer(index, size, type_, normalized, stride, pointer);
+    }
+}
+
+pub fn EnableVertexAttribArray(index: GLuint) {
+    unsafe {
+        gl::EnableVertexAttribArray(index);
     }
 }
