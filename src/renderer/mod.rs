@@ -1,15 +1,17 @@
-mod shader_utils;
-mod sgl;
-pub mod ray_tracer;
-pub mod vertex_buffers;
-
 extern crate gl;
 extern crate sdl2;
 
 use gl::types::GLsizei;
 use sdl2::Sdl;
 use sdl2::video::{GLContext, Window};
+
 use crate::renderer::ray_tracer::RayTracer;
+
+mod shader_utils;
+#[allow(non_snake_case)]
+mod sgl;
+pub mod ray_tracer;
+pub mod vertex_buffers;
 
 pub struct Renderer {
     pub name: &'static str,
@@ -48,8 +50,9 @@ impl Renderer {
 
 
 pub(crate) fn run(renderer: Renderer, ray_tracer: RayTracer) {
-    sgl::Viewport(10, 10, (renderer.width - 20) as GLsizei,
-                  (renderer.height - 20) as GLsizei);  // We want a border
+    /*sgl::Viewport(10, 10, (renderer.width - 20) as GLsizei,
+                  (renderer.height - 20) as GLsizei);  // We want a border */
+    sgl::Viewport(0, 0, renderer.width as GLsizei, renderer.height as GLsizei);
 
     let mut event_pump = renderer.sdl.event_pump().unwrap();
     'main: loop {

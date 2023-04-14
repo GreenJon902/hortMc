@@ -1,13 +1,14 @@
 use std::ffi::{c_void, CString};
 use std::ptr;
+
 use gl::types::{GLint, GLsizei, GLsizeiptr, GLuint};
 use image::imageops::Nearest;
+
 use crate::renderer::sgl;
 use crate::renderer::shader_utils::program::Program;
 use crate::renderer::shader_utils::shader::Shader;
 use crate::renderer::vertex_buffers::VertexBuffers;
 use crate::world::World;
-
 
 #[allow(dead_code)]
 pub struct Camera {
@@ -31,8 +32,8 @@ impl Default for Camera {
             yaw: 0.0,
             pitch: 0.0,
             roll: 0.0,
-            width: 100,
-            height: 100
+            width: 10,
+            height: 10
         }
     }
 }
@@ -58,7 +59,6 @@ impl RayTracer {
         let texture = RayTracer::create_texture(camera.width, camera.height);
         display_shader_program.assign_uniform("Texture", texture as GLint);
         render_shader_program.assign_uniform("Texture", texture as GLint);
-
 
         RayTracer {camera, world, display_shader_program, render_shader_program, vertex_buffers,
             texture}
@@ -111,13 +111,12 @@ impl RayTracer {
             gl::DispatchCompute(self.camera.width, self.camera.height, 1);
             gl::MemoryBarrier(gl::SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
-
             self.display_shader_program.set_used();
             sgl::BindVertexArray(self.vertex_buffers.vao);
             sgl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.vertex_buffers.ebo);
             sgl::DrawElements(
                 gl::TRIANGLES,
-                6,    // count
+                6,
                 gl::UNSIGNED_INT,
                 ptr::null()
             );
@@ -125,8 +124,6 @@ impl RayTracer {
     }
 
     fn create_texture(width: GLuint, height: GLuint) -> GLuint {
-        // load and create a texture
-        // -------------------------
         let mut texture: GLuint = 0;
         unsafe {
             gl::GenTextures(1, &mut texture);
@@ -136,12 +133,11 @@ impl RayTracer {
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE as GLint);
             // set texture filtering parameters
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as GLint);
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as GLint);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as GLint);
 
             gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGBA32F as GLint,
                            width as GLsizei, height as GLsizei, 0, gl::RGBA, gl::FLOAT,
                            0 as *const c_void);
-
             gl::BindImageTexture(0, texture, 0, gl::FALSE, 0, gl::READ_WRITE, gl::RGBA32F);
 
             return texture;
