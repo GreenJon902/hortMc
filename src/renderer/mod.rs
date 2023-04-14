@@ -1,7 +1,7 @@
 extern crate gl;
 extern crate sdl2;
 
-use gl::types::GLsizei;
+use gl::types::{GLenum, GLsizei};
 use sdl2::Sdl;
 use sdl2::video::{GLContext, Window};
 
@@ -12,6 +12,7 @@ mod shader_utils;
 mod sgl;
 pub mod ray_tracer;
 pub mod vertex_buffers;
+pub mod shader_storage_buffer;
 
 pub struct Renderer {
     pub name: &'static str,
@@ -49,7 +50,7 @@ impl Renderer {
 }
 
 
-pub(crate) fn run(renderer: Renderer, ray_tracer: RayTracer) {
+pub(crate) fn run(renderer: Renderer, mut ray_tracer: RayTracer) {
     /*sgl::Viewport(10, 10, (renderer.width - 20) as GLsizei,
                   (renderer.height - 20) as GLsizei);  // We want a border */
     sgl::Viewport(0, 0, renderer.width as GLsizei, renderer.height as GLsizei);
@@ -66,6 +67,18 @@ pub(crate) fn run(renderer: Renderer, ray_tracer: RayTracer) {
         sgl::Clear(gl::COLOR_BUFFER_BIT);
         unsafe { gl::ClearColor(0.1, 0.2, 0.3, 1.); }
         ray_tracer.draw();
+
+        unsafe {
+            let mut err: GLenum;
+            loop {
+                err = gl::GetError();
+                if err == gl::NO_ERROR {
+                    break
+                }
+                println!("{}", err)
+            }
+        }
+
         renderer.window.gl_swap_window();
     }
 }

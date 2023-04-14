@@ -4,9 +4,8 @@ in VS_OUTPUT {
     vec2 TexturePosition;
 } IN;
 
-out vec4 Color;
-
 uniform sampler2D Texture;
+out vec4 Color;
 
 void main()
 {

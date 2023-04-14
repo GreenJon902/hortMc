@@ -1,25 +1,26 @@
 use std::ffi::{c_void, CString};
+use std::mem::size_of;
 use std::ptr;
 
-use gl::types::{GLint, GLsizei, GLuint};
+use gl::types::{GLchar, GLfloat, GLint, GLsizei, GLuint};
 
 use crate::renderer::sgl;
+use crate::renderer::shader_storage_buffer::ShaderStorageBuffer;
 use crate::renderer::shader_utils::program::Program;
 use crate::renderer::shader_utils::shader::Shader;
 use crate::renderer::vertex_buffers::VertexBuffers;
 use crate::world::World;
 
 #[allow(dead_code)]
+#[repr(C)]
+#[derive(Debug)]
 pub struct Camera {
-    x: f64,
-    y: f64,  // Y is up
-    z: f64,
-    yaw: f32,  // 0,0,0 Would be looking towards positive Z
-    pitch: f32,
-    roll: f32,
-
-    width: u32,
-    height: u32
+    x: f32,
+    y: f32,  // Y is up
+    z: f32,
+    pub yaw: f32,  // 0,0,0 Would be looking towards positive Z
+    pub pitch: f32,
+    pub roll: f32,
 }
 
 impl Default for Camera {
@@ -31,8 +32,6 @@ impl Default for Camera {
             yaw: 0.0,
             pitch: 0.0,
             roll: 0.0,
-            width: 10,
-            height: 10
         }
     }
 }
@@ -43,24 +42,31 @@ pub struct RayTracer {
     camera: Camera,
     world: World,
 
+    width: u32,
+    height: u32,
+
     display_shader_program: Program,
     render_shader_program: Program,
     vertex_buffers: VertexBuffers,
     texture: GLuint,
+    camera_ssb: ShaderStorageBuffer
 }
 
 impl RayTracer {
-    pub fn new(camera: Camera, world: World) -> RayTracer {
+    pub fn new(camera: Camera, world: World, width: u32, height: u32) -> RayTracer {
         let display_shader_program = RayTracer::load_display_shaders();
         let render_shader_program = RayTracer::load_render_shaders();
         let vertex_buffers = RayTracer::create_vertex_buffers();
 
-        let texture = RayTracer::create_texture(camera.width, camera.height);
+
+        let texture = RayTracer::create_texture(width, height);
         display_shader_program.assign_uniform("Texture", texture as GLint);
-        render_shader_program.assign_uniform("Texture", texture as GLint);
+        render_shader_program.assign_uniform("OutputTexture", texture as GLint);
+
+        let camera_ssb = ShaderStorageBuffer::new(&camera);
 
         RayTracer {camera, world, display_shader_program, render_shader_program, vertex_buffers,
-            texture}
+            texture, width, height, camera_ssb}
     }
 
     fn load_display_shaders() -> Program {  // Displaying texture on screen
@@ -104,10 +110,12 @@ impl RayTracer {
         return VertexBuffers::new(vertices, indices, layout_sizes);
     }
 
-    pub fn draw(&self) {  // Draws to fill viewport
+    pub fn draw(&mut self) {  // Draws to fill viewport
         self.render_shader_program.set_used();
         unsafe {
-            gl::DispatchCompute(self.camera.width, self.camera.height, 1);
+            self.camera.yaw += 0.01;
+            self.camera_ssb.update(&self.camera);
+            gl::DispatchCompute(self.width, self.height, 1);
             gl::MemoryBarrier(gl::SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
             self.display_shader_program.set_used();
