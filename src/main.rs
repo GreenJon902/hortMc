@@ -1,8 +1,7 @@
 extern crate image;
 
-use crate::renderer::ray_tracer::RayTracer;
 use crate::renderer::{Renderer, run};
-use std::ffi::{c_void, CString};
+use crate::renderer::ray_tracer::RayTracer;
 
 mod renderer;
 mod world;

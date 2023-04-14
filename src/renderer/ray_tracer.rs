@@ -1,8 +1,7 @@
 use std::ffi::{c_void, CString};
 use std::ptr;
 
-use gl::types::{GLint, GLsizei, GLsizeiptr, GLuint};
-use image::imageops::Nearest;
+use gl::types::{GLint, GLsizei, GLuint};
 
 use crate::renderer::sgl;
 use crate::renderer::shader_utils::program::Program;

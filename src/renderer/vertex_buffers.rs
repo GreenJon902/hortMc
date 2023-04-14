@@ -1,6 +1,7 @@
 use std::ffi::c_void;
-use std::ptr;
+
 use gl::types::GLuint;
+
 use crate::renderer::sgl;
 
 pub struct VertexBuffers {
@@ -17,12 +18,11 @@ impl VertexBuffers {
         sgl::GenBuffers(1, &mut vbo);
         sgl::BindBuffer(gl::ARRAY_BUFFER, vbo);
         sgl::BufferData(
-            gl::ARRAY_BUFFER,                                                       // target
-            vertices.len() * std::mem::size_of::<f32>(), // size of data in bytes
-            vertices.as_ptr() as *const gl::types::GLvoid, // pointer to data
-            gl::STATIC_DRAW,                               // usage
+            gl::ARRAY_BUFFER,
+            vertices.len() * std::mem::size_of::<f32>(),  // size of data in bytes
+            vertices.as_ptr() as *const gl::types::GLvoid,  // pointer to data
+            gl::STATIC_DRAW,  // usage
         );
-        sgl::BindBuffer(gl::ARRAY_BUFFER, 0);
 
 
         // set up vertex array object
@@ -33,7 +33,6 @@ impl VertexBuffers {
         let vertex_size: i32 = layout_sizes.iter().sum();
         let mut offset: i32 = 0;
         for (n, layout_size) in layout_sizes.iter().enumerate() {
-
             sgl::BindBuffer(gl::ARRAY_BUFFER, vbo);
             sgl::EnableVertexAttribArray(n as GLuint);
             sgl::VertexAttribPointer(
@@ -46,9 +45,8 @@ impl VertexBuffers {
             );
             offset += layout_size;
         }
-
-        sgl::BindBuffer(gl::ARRAY_BUFFER, 0);
-        sgl::BindVertexArray(0);
+        sgl::BindBuffer(gl::ARRAY_BUFFER, vbo);
+        sgl::BindVertexArray(vao);
 
 
         // set up indices array object

@@ -1,4 +1,5 @@
-use gl::types::{GLchar, GLint, GLuint};
+use gl::types::GLint;
+
 use crate::renderer::sgl;
 use crate::renderer::shader_utils::create_whitespace_cstring_with_len;
 use crate::renderer::shader_utils::shader::Shader;
@@ -17,7 +18,7 @@ impl Program {
 
         sgl::LinkProgram(program_id);
 
-        let mut success: gl::types::GLint = 1;
+        let mut success: GLint = 1;
         sgl::GetProgramiv(program_id, gl::LINK_STATUS, &mut success);
 
         if success == 0 {
