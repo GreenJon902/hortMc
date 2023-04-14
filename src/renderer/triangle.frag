@@ -1,12 +1,14 @@
-#version 330 core
+#version 460 core
 
 in VS_OUTPUT {
-    vec3 Color;
+    vec2 TexturePosition;
 } IN;
 
 out vec4 Color;
 
+uniform sampler2D Texture;
+
 void main()
 {
-    Color = vec4(IN.Color.rgb, 1.0f);
+    Color = texture(Texture, IN.TexturePosition);
 }

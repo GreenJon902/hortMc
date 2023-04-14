@@ -1,6 +1,6 @@
 use std::ffi::{c_void, CString};
 use std::ptr;
-use gl::types::{GLsizeiptr, GLuint};
+use gl::types::{GLint, GLsizei, GLsizeiptr, GLuint};
 use crate::renderer::sgl;
 use crate::renderer::shader_utils::program::Program;
 use crate::renderer::shader_utils::shader::Shader;
@@ -39,6 +39,7 @@ pub struct RayTracer {
 
     shader_program: Program,
     vertex_buffers: VertexBuffers,
+    texture: GLuint,
 }
 
 impl RayTracer {
@@ -46,7 +47,11 @@ impl RayTracer {
         let shader_program = RayTracer::load_shaders();
         let vertex_buffers = RayTracer::create_vertex_buffers();
 
-        RayTracer {camera, world, shader_program, vertex_buffers}
+        let texture = RayTracer::create_texture();
+        shader_program.assign_uniform("Texture", texture as GLint);
+
+
+        RayTracer {camera, world, shader_program, vertex_buffers, texture}
     }
 
     fn load_shaders() -> Program {
@@ -64,18 +69,18 @@ impl RayTracer {
 
     fn create_vertex_buffers() -> VertexBuffers {
         let vertices: Vec<f32> = vec![
-          // Position   Color
-             0.5,  0.5, 1., 0., 0., // top right
-             0.5, -0.5, 0., 1., 0., // bottom right
-            -0.5, -0.5, 0., 0., 1., // bottom left
-            -0.5,  0.5, 1., 1., 1., // top left
+          // Position   Texture
+             0.5,  0.5, 1., 1., // top right
+             0.5, -0.5, 1., 0., // bottom right
+            -0.5, -0.5, 0., 0., // bottom left
+            -0.5,  0.5, 0., 1., // top left
         ];
         let indices: Vec<u32> = vec![
             0, 1, 2,
             2, 3, 0
         ];
         let layout_sizes: Vec<i32> = vec![
-            2, 3  // Position, Color
+            2, 2  // Position, Texture
         ];
         return VertexBuffers::new(vertices, indices, layout_sizes);
     }
@@ -91,5 +96,32 @@ impl RayTracer {
             gl::UNSIGNED_INT,
             ptr::null()
         );
+    }
+
+    fn create_texture() -> GLuint {
+        // load and create a texture
+        // -------------------------
+        let mut texture: GLuint = 0;
+        unsafe {
+            gl::GenTextures(1, &mut texture);
+            gl::BindTexture(gl::TEXTURE_2D, texture);
+            // set the texture wrapping parameters
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as GLint);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as GLint);
+            // set texture filtering parameters
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as GLint);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as GLint);
+
+            // load image, create texture and generate mipmaps
+            let img = image::open("pathToAnImage").unwrap();
+            let img = img.flipv().into_rgba8();
+
+            gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGBA8 as GLint, img.width() as GLsizei,
+                           img.height() as GLsizei, 0, gl::RGBA, gl::UNSIGNED_BYTE,
+                           img.as_raw().as_ptr() as *const c_void);
+            gl::GenerateMipmap(gl::TEXTURE_2D);
+
+            return texture;
+        }
     }
 }

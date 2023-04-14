@@ -152,3 +152,15 @@ pub fn CreateShader(type_: GLenum) -> GLuint {
         return gl::CreateShader(type_);
     }
 }
+
+pub fn Uniform1i(location: GLint, value: GLint) {
+    unsafe {
+        gl::Uniform1i(location, value);
+    }
+}
+
+pub fn GetUniformLocation(program_id: GLuint, name: &str) -> GLint {
+    unsafe {
+        return gl::GetUniformLocation(program_id, name.as_ptr() as *const GLchar);
+    }
+}

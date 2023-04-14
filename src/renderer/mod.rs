@@ -1,5 +1,4 @@
 mod shader_utils;
-#[allow(non_snake_case)]
 mod sgl;
 pub mod ray_tracer;
 pub mod vertex_buffers;
@@ -7,14 +6,10 @@ pub mod vertex_buffers;
 extern crate gl;
 extern crate sdl2;
 
-use std::ffi::c_void;
-use std::ptr;
 use gl::types::GLsizei;
 use sdl2::Sdl;
 use sdl2::video::{GLContext, Window};
 use crate::renderer::ray_tracer::RayTracer;
-use crate::renderer::shader_utils::program::Program;
-use crate::renderer::vertex_buffers::VertexBuffers;
 
 pub struct Renderer {
     pub name: &'static str,
@@ -65,6 +60,7 @@ pub(crate) fn run(renderer: Renderer, ray_tracer: RayTracer) {
         }
 
         sgl::Clear(gl::COLOR_BUFFER_BIT);
+        unsafe { gl::ClearColor(0.1, 0.2, 0.3, 1.); }
         ray_tracer.draw();
         renderer.window.gl_swap_window();
     }
