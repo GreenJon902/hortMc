@@ -48,7 +48,8 @@ impl Renderer {
 
 
 pub(crate) fn run(renderer: Renderer, ray_tracer: RayTracer) {
-    sgl::Viewport(0, 0, renderer.width as GLsizei, renderer.height as GLsizei);
+    sgl::Viewport(10, 10, (renderer.width - 20) as GLsizei,
+                  (renderer.height - 20) as GLsizei);  // We want a border
 
     let mut event_pump = renderer.sdl.event_pump().unwrap();
     'main: loop {

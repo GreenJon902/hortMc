@@ -33,12 +33,11 @@ impl VertexBuffers {
         let vertex_size: i32 = layout_sizes.iter().sum();
         let mut offset: i32 = 0;
         for (n, layout_size) in layout_sizes.iter().enumerate() {
-            println!("{} {} {}", n, layout_size, vertex_size);
 
             sgl::BindBuffer(gl::ARRAY_BUFFER, vbo);
-            sgl::EnableVertexAttribArray(n as GLuint); // this is "layout (location = 0)" in vertex shader
+            sgl::EnableVertexAttribArray(n as GLuint);
             sgl::VertexAttribPointer(
-                n as GLuint,         // index of the generic vertex attribute ("layout (location = 0)")
+                n as GLuint,
                 *layout_size,         // the number of components per generic vertex attribute
                 gl::FLOAT, // data type
                 gl::FALSE, // normalized (int-to-float conversion)

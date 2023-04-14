@@ -1,0 +1,16 @@
+#version 460 core
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+layout(rgba32f, binding = 0) writeonly uniform image2D img_output;
+
+float rand(vec2 co){
+    return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
+void main()
+{
+    ivec2 pos = ivec2(gl_GlobalInvocationID.xy);
+    vec2 spos = vec2(gl_GlobalInvocationID.xy) / vec2(gl_NumWorkGroups);  // Coordinates between 0 and 1
+
+    imageStore(img_output, pos, vec4(spos.xy, rand(spos.xy), 1));
+}
