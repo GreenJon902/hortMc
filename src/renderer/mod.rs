@@ -55,11 +55,16 @@ pub(crate) fn run(renderer: Renderer, mut ray_tracer: RayTracer) {
                   (renderer.height - 20) as GLsizei);  // We want a border */
     sgl::Viewport(0, 0, renderer.width as GLsizei, renderer.height as GLsizei);
 
+    let mut mouse_down = false;
     let mut event_pump = renderer.sdl.event_pump().unwrap();
     'main: loop {
         for event in event_pump.poll_iter() {
             match event {
                 sdl2::event::Event::Quit { .. } => break 'main,
+                sdl2::event::Event::MouseButtonDown { .. } => mouse_down=true,
+                sdl2::event::Event::MouseButtonUp { .. } => mouse_down=false,
+                sdl2::event::Event::MouseMotion { xrel, yrel, .. } if mouse_down == true =>
+                    ray_tracer.camera.look_rel(xrel as f32, -yrel as f32),
                 _ => {}
             }
         }

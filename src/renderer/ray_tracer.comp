@@ -1,26 +1,56 @@
 #version 460 core
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
-struct MyStruct
-{
+struct Camera {
     float x;
     float y;
     float z;
     float yaw;
     float pitch;
-    float roll;
-} ;
+    int fov_x;
+    int fov_y;
+    float near_clip;
+};
 
-layout(std430, binding = 0) buffer MyStructBuffer {
-    MyStruct camera;
+struct Ray {
+    vec3 pos;
+    vec2 dir;  // Change in position after 1 block
+};
+
+layout(std430, binding = 0) buffer CameraBuffer {
+    Camera camera;
 };
 
 writeonly uniform image2D OutputTexture;
 
 void main()
 {
-    ivec2 pos = ivec2(gl_GlobalInvocationID.xy);
-    vec2 spos = vec2(gl_GlobalInvocationID.xy) / vec2(gl_NumWorkGroups);  // Coordinates between 0 and 1
+    ivec2 image_pixel_position = ivec2(gl_GlobalInvocationID.xy);
 
-    imageStore(OutputTexture, pos, vec4(spos.xy, camera.yaw, 1));
+    // Between -0.5 and 0.5 multiplied by fov to get this ray's angle relative to the camera (as if facing 0,0,0)
+    vec2 relative_ray_direction_angle = (vec2(gl_GlobalInvocationID.xy) / vec2(gl_NumWorkGroups) - 0.5)
+                                  * vec2(camera.fov_x, camera.fov_y);  // Effectively yaw, pitch
+    /*vec3 point = vec3(sin(radians(camera.yaw + relative_ray_direction_angle.x)),
+                      sin(radians(camera.pitch + relative_ray_direction_angle.y)),
+                      cos(radians(camera.yaw + relative_ray_direction_angle.x)));*/
+
+
+    float yaw = radians(-camera.yaw - relative_ray_direction_angle.x);
+    float pitch = radians(-camera.pitch - relative_ray_direction_angle.y);
+    vec3 point = vec3(sin(yaw),
+                      cos(yaw) * sin(pitch),
+                      cos(yaw) * cos(pitch));
+    float multiplier = 1 / min(min(point.x, point.y), point.z);
+    point *= multiplier;
+
+    Ray ray = Ray(
+        vec3(camera.x, camera.y, camera.z),
+        vec2(camera.pitch,
+             camera.yaw)
+    );
+    if (point.x == 1 || point.y == 1 || point.z == 1) {
+        imageStore(OutputTexture, image_pixel_position, vec4(1, 1, 1, 1));
+    } else {
+        imageStore(OutputTexture, image_pixel_position, vec4(0, 0, 0, 1));
+    }
 }

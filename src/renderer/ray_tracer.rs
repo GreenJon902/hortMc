@@ -18,9 +18,21 @@ pub struct Camera {
     x: f32,
     y: f32,  // Y is up
     z: f32,
-    pub yaw: f32,  // 0,0,0 Would be looking towards positive Z
-    pub pitch: f32,
-    pub roll: f32,
+    yaw: f32,  // 0,0,0 Would be looking towards positive Z
+    pitch: f32,
+
+    fov_x: i32,
+    fov_y: i32,
+
+    near_clip: f32
+}
+
+impl Camera {
+    pub fn look_rel(&mut self, rel_yaw: f32, rel_pitch: f32) {
+        println!("{} {}", self.yaw, self.pitch);
+        self.yaw += rel_yaw;
+        self.pitch += rel_pitch;
+    }
 }
 
 impl Default for Camera {
@@ -31,7 +43,9 @@ impl Default for Camera {
             z: 0.0,
             yaw: 0.0,
             pitch: 0.0,
-            roll: 0.0,
+            fov_x: 70,
+            fov_y: 45,
+            near_clip: 0.1
         }
     }
 }
@@ -39,7 +53,7 @@ impl Default for Camera {
 
 #[allow(dead_code)]
 pub struct RayTracer {
-    camera: Camera,
+    pub(crate) camera: Camera,
     world: World,
 
     width: u32,
@@ -113,7 +127,6 @@ impl RayTracer {
     pub fn draw(&mut self) {  // Draws to fill viewport
         self.render_shader_program.set_used();
         unsafe {
-            self.camera.yaw += 0.01;
             self.camera_ssb.update(&self.camera);
             gl::DispatchCompute(self.width, self.height, 1);
             gl::MemoryBarrier(gl::SHADER_IMAGE_ACCESS_BARRIER_BIT);
