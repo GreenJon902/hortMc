@@ -9,8 +9,8 @@ mod world;
 
 
 fn main() {
-    let renderer = Renderer::new("Game", 900, 700);
-    let ray_tracer = RayTracer::new(Default::default(), Default::default(), 100, 100);
+    let renderer = Renderer::new("Game", 900, 900);
+    let ray_tracer = RayTracer::new(Default::default(), Default::default(), 900, 900);
 
     run(renderer, ray_tracer)
 }

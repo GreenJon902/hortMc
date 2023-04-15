@@ -23,8 +23,6 @@ pub struct Camera {
 
     fov_x: i32,
     fov_y: i32,
-
-    near_clip: f32
 }
 
 impl Camera {
@@ -43,9 +41,8 @@ impl Default for Camera {
             z: 0.0,
             yaw: 0.0,
             pitch: 0.0,
-            fov_x: 70,
-            fov_y: 45,
-            near_clip: 0.1
+            fov_x: 120,
+            fov_y: 120,
         }
     }
 }

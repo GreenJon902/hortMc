@@ -1,7 +1,7 @@
 #version 460 core
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
-struct Camera {
+struct CameraIn {
     float x;
     float y;
     float z;
@@ -9,37 +9,129 @@ struct Camera {
     float pitch;
     int fov_x;
     int fov_y;
-    float near_clip;
 };
 
-struct Ray {
+struct Camera {
     vec3 pos;
-    vec2 dir;  // Change in position after 1 block
+    vec2 rot;
+    vec2 fov;
+};
+
+struct Ray {  // We store rays as an x coordinate and 2 line equations - z = my * x + cy, y = mz * x + cz
+    vec3 pos;
+
+    float my;  // Gradient in the y plane                              //  Calculate z from x value
+    float cy;  // Y intercept in the y plane (the y position at 0, 0)  //  /
+    float mz;                                                          //  Calculater y from x value
+    float cz;                                                          //  /
 };
 
 layout(std430, binding = 0) buffer CameraBuffer {
-    Camera camera;
+    CameraIn cameraIn;
 };
 
 writeonly uniform image2D OutputTexture;
 
-Ray makeRay() {
-    // Calculate size of projection plane
-    float planeHeight = camera.near_clip * tan(radians(float(camera.fov_y) * 0.5)) * 2;
-    float planeWidth = camera.near_clip * tan(radians(float(camera.fov_x) * 0.5)) * 2;
-    // Bottom left corner of the plane (in camera's local space)
-    vec3 bottomLeftLocal = vec3(-planeWidth / 2, -planeHeight / 2, camera.near_clip);
+Ray make_ray_from_camera(Camera camera) {
+    // Coords -0.5 and 0.5 are multiplied by fov to get this ray's angle relative to the camera
+    vec2 relative_ray_angle = (vec2(gl_GlobalInvocationID.xy) / vec2(gl_NumWorkGroups) - 0.5)
+                                   * camera.fov;  // Effectively yaw, pitch
 
-    vec2 t = gl_GlobalInvocationID.xy / gl_NumWorkGroups.xy;  // 0 = bottom / left, 1 = top / right
+    float yaw = radians(camera.rot.x + relative_ray_angle.x);
+    float pitch = radians(camera.rot.y + relative_ray_angle.y);
+    vec3 point = vec3(sin(yaw),  // A point (relative to the camera) which the camera is looking at
+                      sin(pitch),
+                      cos(yaw));
 
-    //https://youtu.be/Qz0KTGYJtUk?t=129
-    vec3 pointLocal = bottomLeftLocal + vec3(planeWidth * t.x, planeHeight * t.y, 0);
-    vec3 point = pointLocal + vec3(camera.x, camera.y, camera.z);
-    vec3 dir = normalize(point - vec3(camera.x, camera.y, camera.z));
+    float my = point.z / point.x; // Gradient of the line in the y plane
+    float cy = camera.pos.z - my * camera.pos.x; // Position of the line when Z = 0
+    float mz = point.y / point.x; // Gradient of the line in the z plane
+    float cz = camera.pos.y - mz * camera.pos.x; // Position of the line when Y = 0
+
+    //return Ray(camera.pos, my, mz);
+    return Ray(point, my, cy, mz, cz);
 }
 
+vec3 round_away_from_position(vec3 x, vec3 pos) {  // Rounds each term of x away from the position
+    return vec3(
+            x.x < pos.x ? floor(x.x) : ceil(x.x),
+            x.y < pos.y ? floor(x.y) : ceil(x.y),
+            x.z < pos.z ? floor(x.z) : ceil(x.z)
+    );
+}
+
+vec3 increment_equal(vec3 a, vec3 b, vec3 c) {  // Increament any of a by c, if they equal b
+    return vec3(
+        a.x == b.x ? (a.x + c.x) : a.x,
+        a.y == b.y ? (a.y + c.y) : a.y,
+        a.z == b.z ? (a.z + c.z) : a.z
+    );
+}
+
+vec3 step_ray(Ray ray, Camera camera) {  // Move ray until at least one coordinate is an integer and then return coords
+    vec3 rounded_ray_position = round_away_from_position(ray.pos, camera.pos);
+    rounded_ray_position = increment_equal(rounded_ray_position, ray.pos, vec3(ray.pos.x < camera.pos.x ? -1 : 1,
+                                                                               ray.pos.y < camera.pos.y ? -1 : 1,
+                                                                               ray.pos.z < camera.pos.z ? -1 : 1));
+    float x = rounded_ray_position.x;
+    float y = ray.mz * x + ray.my;
+    float z = ray.my * x + ray.cy;
+    return vec3(x, y, z);
+}
+
+void main2() {
+    ivec2 image_pixel_position = ivec2(gl_GlobalInvocationID.xy);
+
+    Camera camera = Camera(vec3(cameraIn.x, cameraIn.y, cameraIn.z),
+                           vec2(cameraIn.yaw, cameraIn.pitch),
+                           vec2(cameraIn.fov_x, cameraIn.fov_y));
+
+    Ray ray = make_ray_from_camera(camera);
+
+    for (int i=0; i<10; i++) {
+        vec3 stepped_ray_pos = step_ray(ray, camera);
+        ray.pos = stepped_ray_pos;
+        if (stepped_ray_pos.x == 5. && 0. < stepped_ray_pos.y && stepped_ray_pos.y < 1. ) {//
+            imageStore(OutputTexture, image_pixel_position, vec4(1, 0, 0, 1));
+            break;
+        } else {
+            imageStore(OutputTexture, image_pixel_position, vec4(0, 0, 0, 1));
+        }
+    }
+}
+
+#define ITER 512
+#define SCALE 80
 void main() {
     ivec2 image_pixel_position = ivec2(gl_GlobalInvocationID.xy);
 
+    Camera camera = Camera(vec3(cameraIn.x, cameraIn.y, cameraIn.z),
+                           vec2(cameraIn.yaw, cameraIn.pitch),
+                           vec2(cameraIn.fov_x, cameraIn.fov_y));
 
+    vec2 FPT = vec2(0.2, 0.1);
+    ivec2 PT = ivec2(FPT - vec2(gl_NumWorkGroups.xy) / 2.);
+    int SIZE = int(min(gl_NumWorkGroups.x, gl_NumWorkGroups.y)) / SCALE;
+    ivec2 look = ivec2(int(sin(radians(camera.rot.x)) * float(SIZE)));
+    int scroll = int(radians(camera.rot.x) * 256.) / 3;
+
+    ivec2 sum = ivec2(0);
+    ivec2 ray = sum;
+    int z;
+    for (z = scroll; z < ITER + scroll; ++z) {
+        sum += PT;
+        sum += look;
+        ray = sum >> 8;
+        if ((z & 64) != 0 && abs(ray.x) > SIZE || abs(ray.y) > SIZE)
+        break;
+    }
+    ivec3 COL = ivec3((ray.x ^ ray.y ^ z) & 255);
+    if (abs(ray.y) > SIZE)
+    COL.x >>= 1;
+    if (abs(ray.x) > SIZE)
+    COL.y >>= 1;
+    if (z == ITER + scroll)
+    COL = ivec3(0);
+
+    imageStore(OutputTexture, image_pixel_position, vec4(COL, 1));
 }
