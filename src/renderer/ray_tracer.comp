@@ -83,26 +83,22 @@ float min3(vec3 v) {
 }
 
 
-int step_block(Ray ray) {  // We check if floored values before and after movement are different (new block / integer)
-                           // Returns -1 for no collission, 0 for x, 1 for y, and 2 for z
-    vec3 int_before_pos = floor(ray.pos);
-    vec3 after_pos = ray.pos + ray.dir;
-    vec3 int_after_pos = floor(after_pos);
+Ray step_block(Ray ray) {
+    ray.pos += ray.dir * 0.1;
 
-    vec3 distance_multipliers = round(after_pos) - ray.pos; // Distance multipliers for each movement
-    float smallest_disntance_mutliplier = min3(distance_multipliers);
+    vec3 positive_direction_times = abs(ceil(ray.pos) - ray.pos) / ray.dir;  // Time is theoretical, think like a photon
+    vec3 negative_direction_times = abs(floor(ray.pos) - ray.pos) / ray.dir;
 
-    int collision_side;
-    if (int_before_pos.x != int_after_pos.x && smallest_disntance_mutliplier == distance_multipliers.x) {
-        collision_side = 0;
-    } else if (int_before_pos.y != int_after_pos.y && smallest_disntance_mutliplier == distance_multipliers.y) {
-        collision_side = 1;
-    } else if (int_before_pos.z != int_after_pos.z && smallest_disntance_mutliplier == distance_multipliers.z) {
-        collision_side = 2;
+    float minimum_positive_direction_time = min3(positive_direction_times);
+    float minimum_negative_direction_time = min3(negative_direction_times);
+
+    if (minimum_positive_direction_time < minimum_negative_direction_time) {
+        ray.pos += minimum_positive_direction_time * ray.dir;
     } else {
-        collision_side = -1;
-        smallest_disntance_mutliplier = 1; // Step the ray by its entire movement
+        ray.pos -= minimum_negative_direction_time * ray.dir;
     }
+
+    return ray;
 }
 
 void main() {
@@ -111,5 +107,14 @@ void main() {
     Camera camera = make_camera();
     Ray ray = make_ray(camera, image_pixel_position);
 
-    imageStore(outputTexture, image_pixel_position, vec4(fract(3.1), 0, 0, 1));
+    for (int i=0; i<10; i++) {
+        ray = step_block(ray);
+        if (6.9 < ray.pos.z && ray.pos.z < 8) {
+           imageStore(outputTexture, image_pixel_position, vec4(1, 0, 0, 1));
+           break;
+        } else {
+            imageStore(outputTexture, image_pixel_position, vec4(0, 0, 0, 1));
+        }
+    }
+    //imageStore(outputTexture, image_pixel_position, vec4(ray.pos, 1));
 }
