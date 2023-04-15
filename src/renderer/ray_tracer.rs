@@ -23,7 +23,6 @@ pub struct Camera {
     roll: f32,
 
     fov: i32,
-    test: f32,
 }
 
 impl Camera {
