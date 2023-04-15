@@ -23,34 +23,23 @@ layout(std430, binding = 0) buffer CameraBuffer {
 
 writeonly uniform image2D OutputTexture;
 
-void main()
-{
+Ray makeRay() {
+    // Calculate size of projection plane
+    float planeHeight = camera.near_clip * tan(radians(float(camera.fov_y) * 0.5)) * 2;
+    float planeWidth = camera.near_clip * tan(radians(float(camera.fov_x) * 0.5)) * 2;
+    // Bottom left corner of the plane (in camera's local space)
+    vec3 bottomLeftLocal = vec3(-planeWidth / 2, -planeHeight / 2, camera.near_clip);
+
+    vec2 t = gl_GlobalInvocationID.xy / gl_NumWorkGroups.xy;  // 0 = bottom / left, 1 = top / right
+
+    //https://youtu.be/Qz0KTGYJtUk?t=129
+    vec3 pointLocal = bottomLeftLocal + vec3(planeWidth * t.x, planeHeight * t.y, 0);
+    vec3 point = pointLocal + vec3(camera.x, camera.y, camera.z);
+    vec3 dir = normalize(point - vec3(camera.x, camera.y, camera.z));
+}
+
+void main() {
     ivec2 image_pixel_position = ivec2(gl_GlobalInvocationID.xy);
 
-    // Between -0.5 and 0.5 multiplied by fov to get this ray's angle relative to the camera (as if facing 0,0,0)
-    vec2 relative_ray_direction_angle = (vec2(gl_GlobalInvocationID.xy) / vec2(gl_NumWorkGroups) - 0.5)
-                                  * vec2(camera.fov_x, camera.fov_y);  // Effectively yaw, pitch
-    /*vec3 point = vec3(sin(radians(camera.yaw + relative_ray_direction_angle.x)),
-                      sin(radians(camera.pitch + relative_ray_direction_angle.y)),
-                      cos(radians(camera.yaw + relative_ray_direction_angle.x)));*/
 
-
-    float yaw = radians(-camera.yaw - relative_ray_direction_angle.x);
-    float pitch = radians(-camera.pitch - relative_ray_direction_angle.y);
-    vec3 point = vec3(sin(yaw),
-                      cos(yaw) * sin(pitch),
-                      cos(yaw) * cos(pitch));
-    float multiplier = 1 / min(min(point.x, point.y), point.z);
-    point *= multiplier;
-
-    Ray ray = Ray(
-        vec3(camera.x, camera.y, camera.z),
-        vec2(camera.pitch,
-             camera.yaw)
-    );
-    if (point.x == 1 || point.y == 1 || point.z == 1) {
-        imageStore(OutputTexture, image_pixel_position, vec4(1, 1, 1, 1));
-    } else {
-        imageStore(OutputTexture, image_pixel_position, vec4(0, 0, 0, 1));
-    }
 }
