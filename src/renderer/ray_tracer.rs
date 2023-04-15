@@ -22,7 +22,8 @@ pub struct Camera {
     pitch: f32,
     roll: f32,
 
-    fov: i32
+    fov: i32,
+    test: f32,
 }
 
 impl Camera {

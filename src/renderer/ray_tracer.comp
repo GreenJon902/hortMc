@@ -22,11 +22,6 @@ struct Camera {  // For actual use of camera
 
 struct Ray {  // We store rays as an x coordinate and 2 line equations - z = my * x + cy, y = mz * x + cz
     vec3 pos;
-
-    float my;  // Gradient in the y plane                              //  Calculate z from x value
-    float cy;  // Y intercept in the y plane (the y position at 0, 0)  //  /
-    float mz;                                                          //  Calculater y from x value
-    float cz;                                                          //  /
 };
 
 layout(std430, binding = 0) buffer CameraBuffer {
@@ -76,16 +71,21 @@ Camera make_camera() {  // From IN.camera
     return Camera(image_size, rotation_matrix, forward, right, up, image_plane_distance);
 }
 
-
-void main() {
-    Camera camera = make_camera();
-    ivec2 image_pixel_position = ivec2(gl_GlobalInvocationID.xy);  // Our position on image in pixels
-
+Ray make_ray(Camera camera, ivec2 image_pixel_position) {
     vec3 ray_direction = normalize(camera.forward * camera.image_plane_distance  // In view space
         + (float(image_pixel_position.x) - camera.image_size.x / 2.0) / camera.image_size.y * camera.right * camera.image_plane_distance
         + (float(image_pixel_position.y) - camera.image_size.y / 2.0) / camera.image_size.y * camera.up * camera.image_plane_distance);
     ray_direction = camera.rotation_matrix * ray_direction;  // Move to world space
     ray_direction = normalize(ray_direction);
+    return Ray(vec3(0, 0, 0));
+}
 
-    imageStore(outputTexture, image_pixel_position, vec4(ray_direction, 1));
+
+void main() {
+    ivec2 image_pixel_position = ivec2(gl_GlobalInvocationID.xy);  // Our position on image in pixels
+
+    Camera camera = make_camera();
+    Ray ray = make_ray(camera, image_pixel_position);
+
+    imageStore(outputTexture, image_pixel_position, vec4(1, 0, 0, 1));
 }

@@ -20,7 +20,7 @@ impl ShaderStorageBuffer {
                 gl::SHADER_STORAGE_BUFFER,
                 std::mem::size_of::<T>() as isize,
                 ptr::null(),
-                gl::STATIC_DRAW,
+                gl::DYNAMIC_DRAW,
             );
 
             gl::BindBufferBase(gl::SHADER_STORAGE_BUFFER, 0, buffer_id);
