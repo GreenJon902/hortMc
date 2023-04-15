@@ -26,10 +26,11 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn look_rel(&mut self, rel_yaw: f32, rel_pitch: f32) {
-        println!("{} {}", self.yaw, self.pitch);
+    pub fn look_rel(&mut self, rel_yaw: f32, rel_pitch: f32, rel_roll: f32) {
+        println!("{} {} {}", self.yaw, self.pitch, self.roll);
         self.yaw += rel_yaw;
         self.pitch += rel_pitch;
+        self.roll += rel_roll;
     }
 }
 

@@ -64,7 +64,7 @@ pub(crate) fn run(renderer: Renderer, mut ray_tracer: RayTracer) {
                 sdl2::event::Event::MouseButtonDown { .. } => mouse_down=true,
                 sdl2::event::Event::MouseButtonUp { .. } => mouse_down=false,
                 sdl2::event::Event::MouseMotion { xrel, yrel, .. } if mouse_down == true =>
-                    ray_tracer.camera.look_rel(xrel as f32, -yrel as f32),
+                    ray_tracer.camera.look_rel(xrel as f32, yrel as f32, 0.),
                 _ => {}
             }
         }
