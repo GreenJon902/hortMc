@@ -20,9 +20,9 @@ pub struct Camera {
     z: f32,
     yaw: f32,  // 0,0,0 Would be looking towards positive Z
     pitch: f32,
+    roll: f32,
 
-    fov_x: i32,
-    fov_y: i32,
+    fov: i32
 }
 
 impl Camera {
@@ -41,8 +41,8 @@ impl Default for Camera {
             z: 0.0,
             yaw: 0.0,
             pitch: 0.0,
-            fov_x: 120,
-            fov_y: 120,
+            roll: 0.0,
+            fov: 120
         }
     }
 }
