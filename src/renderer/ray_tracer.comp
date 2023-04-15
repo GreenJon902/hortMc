@@ -82,23 +82,44 @@ float min3(vec3 v) {
     return min(min(v.x, v.y), v.z);
 }
 
+bool hasInteger(vec3 v) {
+    return any(equal(fract(v), vec3(0.0)));
+}
+
+#define epsilon 0.0001
 
 Ray step_block(Ray ray) {
-    ray.pos += ray.dir * 0.1;
+    if (hasInteger(ray.pos)) {
+        ray.pos += ray.dir * epsilon;
+    }
 
-    vec3 positive_direction_times = (ceil(ray.pos) - ray.pos) / ray.dir;  // Time is theoretical, think like a photon
-    vec3 negative_direction_times = (floor(ray.pos) - ray.pos) / ray.dir;
-
-    float minimum_positive_direction_time = min3(positive_direction_times);
-    float minimum_negative_direction_time = min3(negative_direction_times);
-
-    if (minimum_positive_direction_time < minimum_negative_direction_time) {
-        ray.pos += minimum_positive_direction_time * ray.dir;
-    } else {
-        ray.pos -= minimum_negative_direction_time * ray.dir;
+    while (!hasInteger(ray.pos)) {
+        float x = ray.pos.x;
+        float y = ray.pos.y;
+        float z = ray.pos.z;
+        float dx = ray.dir.x;
+        float dy = ray.dir.y;
+        float dz = ray.dir.z;
+        vec3 times = vec3(dx > 0 ? ((ceil(x) - x) / dx) : ((x - floor(x)) / abs(dx)),
+                          dy > 0 ? ((ceil(y) - y) / dy) : ((y - floor(y)) / abs(dy)),
+                          dz > 0 ? ((ceil(z) - z) / dz) : ((z - floor(z)) / abs(dz)));
+        float time = min3(times);
+        ray.pos += ray.dir * time;
     }
 
     return ray;
+}
+
+bool collideXFace(vec3 v, float x, float y, float z) {
+    return v.x == x && y < v.y && v.y < (y + 1) && z < v.z && v.z < (z + 1);
+}
+
+bool collideYFace(vec3 v, float x, float y, float z) {
+    return x < v.x && v.x < (x + 1) && v.y == y && z < v.z && v.z < (z + 1);
+}
+
+bool collideZFace(vec3 v, float x, float y, float z) {
+    return x < v.x && v.x < (x + 1) && y < v.y && v.y < (y + 1) && v.z == z;
 }
 
 void main() {
@@ -109,7 +130,7 @@ void main() {
 
     for (int i=0; i<10; i++) {
         ray = step_block(ray);
-        if (6.9 < ray.pos.z && ray.pos.z < 8) {
+        if (collideXFace(ray.pos, 2, 1, 5) || collideYFace(ray.pos, 2, 1, 5) || collideZFace(ray.pos, 2, 1, 5)) {
            imageStore(outputTexture, image_pixel_position, vec4(1, 0, 0, 1));
            break;
         } else {
