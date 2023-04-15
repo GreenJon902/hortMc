@@ -86,8 +86,8 @@ float min3(vec3 v) {
 Ray step_block(Ray ray) {
     ray.pos += ray.dir * 0.1;
 
-    vec3 positive_direction_times = abs(ceil(ray.pos) - ray.pos) / ray.dir;  // Time is theoretical, think like a photon
-    vec3 negative_direction_times = abs(floor(ray.pos) - ray.pos) / ray.dir;
+    vec3 positive_direction_times = (ceil(ray.pos) - ray.pos) / ray.dir;  // Time is theoretical, think like a photon
+    vec3 negative_direction_times = (floor(ray.pos) - ray.pos) / ray.dir;
 
     float minimum_positive_direction_time = min3(positive_direction_times);
     float minimum_negative_direction_time = min3(negative_direction_times);
