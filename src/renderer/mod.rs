@@ -1,6 +1,8 @@
 extern crate gl;
 extern crate sdl2;
 
+use std::time::{Duration, Instant, SystemTime};
+
 use gl::types::{GLenum, GLsizei};
 use sdl2::Sdl;
 use sdl2::video::{GLContext, Window};
@@ -30,6 +32,7 @@ impl Renderer {
 
         let gl_attr = video_subsystem.gl_attr();
 
+
         gl_attr.set_context_profile(sdl2::video::GLProfile::Core);
         gl_attr.set_context_version(4, 1);
 
@@ -44,6 +47,7 @@ impl Renderer {
         gl::load_with(|s| video_subsystem.gl_get_proc_address(s)
             as *const std::os::raw::c_void);
 
+        video_subsystem.gl_set_swap_interval(0).err();
 
         Renderer { name, width, height, sdl, window, gl_context}
     }
@@ -57,6 +61,8 @@ pub(crate) fn run(renderer: Renderer, mut ray_tracer: RayTracer) {
 
     let mut mouse_down = false;
     let mut event_pump = renderer.sdl.event_pump().unwrap();
+    let mut n_frames = 0;
+    let mut time = Instant::now();
     'main: loop {
         for event in event_pump.poll_iter() {
             match event {
@@ -86,5 +92,12 @@ pub(crate) fn run(renderer: Renderer, mut ray_tracer: RayTracer) {
         }
 
         renderer.window.gl_swap_window();
+
+        n_frames += 1;
+        if time.elapsed().as_secs() >= 1 {
+            println!("{}", n_frames as f64 / time.elapsed().as_secs_f64());
+            time = Instant::now();
+            n_frames = 0;
+        };
     }
 }
