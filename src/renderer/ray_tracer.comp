@@ -1,15 +1,5 @@
 #version 460 core
-layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
-
-struct Camera {  // For actual use of camera
-    vec3 pos;
-    ivec2 image_size;
-    mat3 rotation_matrix;
-    vec3 forward;
-    vec3 right;
-    vec3 up;
-    float image_plane_distance;
-};
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 
 struct Ray {
     vec3 pos;
@@ -19,31 +9,26 @@ struct Ray {
 layout (std140) uniform CameraBlock {
     vec3 camera_pos;
     mat3 camera_rot_mat;
-    int fov;
-} IN;
+    vec2 fov;
+};
 
 writeonly uniform image2D outputTexture;
 
 
-Camera make_camera() {  // From IN
-    ivec2 image_size = ivec2(gl_NumWorkGroups.xy);
-    vec3 forward = IN.camera_rot_mat * vec3(0.0, 0.0, 1.0);
-    vec3 right = IN.camera_rot_mat * vec3(1.0, 0.0, 0.0);
-    vec3 up = IN.camera_rot_mat * vec3(0.0, 1.0, 0.0);
-    float image_plane_distance = image_size.y / (2.0 * tan(radians(float(IN.fov)) / 2.0));
-
-    return Camera(IN.camera_pos, image_size, IN.camera_rot_mat, forward, right, up, image_plane_distance);
+vec3 get_local_ray_direction(vec2 pos, vec2 size) {  // Get the local ray direction. Fov can be infinite
+    vec2 angle = (pos / size - 0.5) * radians(fov);
+    vec3 dir = vec3(sin(angle.x) * cos(angle.y), sin(angle.y), cos(angle.x) * cos(angle.y));
+    return normalize(dir);
 }
 
+Ray make_ray() {
+    ivec2 image_position = ivec2(gl_GlobalInvocationID.xy);  // pos on image
+    ivec2 image_size = ivec2(gl_NumWorkGroups.xy);  // pos on image
 
-
-Ray make_ray(Camera camera, ivec2 image_pixel_position) {
-    vec3 ray_direction = normalize(camera.forward * camera.image_plane_distance  // In view space
-        + (float(image_pixel_position.x) - camera.image_size.x / 2.0) / camera.image_size.y * camera.right * camera.image_plane_distance
-        + (float(image_pixel_position.y) - camera.image_size.y / 2.0) / camera.image_size.y * camera.up * camera.image_plane_distance);
-    ray_direction = camera.rotation_matrix * ray_direction;  // Move to world space
+    vec3 ray_direction = get_local_ray_direction(image_position, image_size);
+    ray_direction = camera_rot_mat * ray_direction; // apply camera rotation
     ray_direction = normalize(ray_direction);
-    return Ray(camera.pos, ray_direction);
+    return Ray(camera_pos, ray_direction);
 }
 
 float min3(vec3 v) {
@@ -60,8 +45,9 @@ Ray step_block(Ray ray) {
     if (hasInteger(ray.pos)) {
         ray.pos += ray.dir * epsilon;
     }
-
-    while (!hasInteger(ray.pos)) {
+    int loops = 0;
+    while (!hasInteger(ray.pos) && loops < 3) {  // Protection to stop infinite looping
+        loops += 1;
         float x = ray.pos.x;
         float y = ray.pos.y;
         float z = ray.pos.z;
@@ -92,18 +78,83 @@ bool collideZFace(vec3 v, float x, float y, float z) {
 
 
 void main() {
-    ivec2 image_pixel_position = ivec2(gl_GlobalInvocationID.xy);  // Our position on image in pixels
-
-    Camera camera = make_camera();
-    Ray ray = make_ray(camera, image_pixel_position);
+    ivec2 image_position = ivec2(gl_GlobalInvocationID.xy);  // Our position on image in pixels
+    Ray ray = make_ray();
+    //imageStore(outputTexture, image_position, vec4(ray.dir, 1));
+    //return;
 
     for (int i=0; i<10; i++) {
         ray = step_block(ray);
         if (collideXFace(ray.pos, 2, 1, 5) || collideYFace(ray.pos, 2, 1, 5) || collideZFace(ray.pos, 2, 1, 5)) {
-            imageStore(outputTexture, image_pixel_position, vec4(1, 0, 0, 1));
+            imageStore(outputTexture, image_position, vec4(1, 0, 0, 1));
             break;
         } else {
-            imageStore(outputTexture, image_pixel_position, vec4(0, 0, 0, 1));
+            imageStore(outputTexture, image_position, vec4(0, 0, 0, 1));
         }
     }
 }
+
+
+
+/*
+vec3 equi_angular_projection(vec2 pos, vec2 size) { // Image coorinates to local ray direction.
+                                                  // Supports infinite fov (horizontal).
+    vec2 ndc = vec2(2.0 * pos.x / size.x - 1.0, 2.0 * pos.y / size.y - 1.0);
+
+    float r = length(ndc);
+    float phi = atan(r * tan(radians(float(fov)) / 2.0));
+
+    vec3 dir = vec3(ndc, cos(phi));
+    return normalize(dir);
+}
+
+
+vec3 cube_map_projection(vec2 pos, vec2 size) {
+    vec2 fov = vec2(720, 90);
+
+    vec2 uv = (pos + 0.5) / size;
+    float aspect_ratio = size.x / size.y;
+    float ndc_x = (2.0 * uv.x - 1.0) * aspect_ratio;
+    float ndc_y = 1.0 - 2.0 * uv.y;
+
+    vec2 tan_half_fov = tan(fov / 2);
+    vec3 dir = normalize(vec3(ndc_x * tan_half_fov.x, ndc_y * -tan_half_fov.y, 1.0));
+    return dir;
+}
+
+vec3 sphere_map_projection(vec2 pos, vec2 size) {
+    vec2 fov = vec2(radians(90.), radians(90.));
+
+    // Calculate angle away from camera forward (but camera local)
+    float theta_x = (2 * atan(tan(fov.x / 2) * (pos.x - (size.x / 2)) / (size.x / 2))) - (fov.x / 2);
+    float theta_y = (2 * atan(tan(fov.y / 2) * ((size.y / 2) - pos.y) / (size.y / 2))) - (fov.y / 2);
+
+    float dir_x = sin(theta_x) * cos(theta_y);
+    float dir_y = sin(theta_y);
+    float dir_z = cos(theta_x) * cos(theta_y);
+    vec3 dir = vec3(dir_x, dir_y, dir_z);
+    return normalize(dir);
+}
+
+#define PI 3.1415926535897932
+vec3 perspective_projection(vec2 pos, vec2 size) {
+    vec2 fov = vec2(360, 90);
+
+    float aspect_ratio = size.x / size.y;
+    float theta_h = fov.x / 2 * PI / 180;
+    float theta_v = fov.y / 2 * PI / 180;
+
+    float ndc_x = (2 * pos.x + 1) / size.x - 1;
+    float ndc_y = 1 - (2 * pos.y + 1) / size.y;
+
+    float tan_theta_h = tan(theta_h);
+    float tan_theta_v = tan(theta_v);
+
+    float distance_ = 0.5 / max(tan_theta_h / aspect_ratio, tan_theta_v);
+
+    vec3 direction_camera = vec3(ndc_x * aspect_ratio * tan_theta_h, -ndc_y * tan_theta_v, 1.0);
+    direction_camera = normalize(direction_camera);
+
+    return normalize(direction_camera);
+}
+*/

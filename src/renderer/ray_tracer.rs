@@ -3,7 +3,7 @@ use std::mem::size_of;
 use std::ptr;
 
 use gl::types::{GLchar, GLfloat, GLint, GLsizei, GLsizeiptr, GLuint};
-use std140::{float, int, mat3x3, vec3};
+use std140::{float, int, mat3x3, vec2, vec3};
 
 use crate::renderer::sgl;
 use crate::renderer::shader_storage_buffer::ShaderStorageBuffer;
@@ -24,7 +24,7 @@ fn make_yaw_pitch_roll_matrix(yaw: f32, pitch: f32, roll: f32) -> mat3x3 {
     let cos_roll = roll.cos();
     let sin_roll = roll.sin();
 
-    let mut rotation_matrix = mat3x3(
+    let rotation_matrix = mat3x3(
         vec3(cos_yaw * cos_roll + sin_yaw * sin_pitch * sin_roll,
              sin_roll * cos_pitch,
              -sin_yaw * cos_roll + cos_yaw * sin_pitch * sin_roll),
@@ -47,7 +47,7 @@ fn make_yaw_pitch_roll_matrix(yaw: f32, pitch: f32, roll: f32) -> mat3x3 {
 struct CameraBuffer { // All values are duplicates of Camera
     pos: vec3,
     rot: mat3x3,
-    fov: int
+    fov: vec2
 }
 
 #[derive(Debug)]
@@ -56,14 +56,14 @@ pub struct Camera {
     pitch: f32,
     yaw: f32,  // 0,0,0 Would be looking towards positive Z
     roll: f32,
-    fov: i32,
+    fov: vec2,
 
     buffer_id: GLuint,
     buffer: CameraBuffer
 }
 
 impl Camera {
-    pub fn new(pos: vec3, pitch: f32, yaw: f32, roll: f32, fov: i32) -> Camera {
+    pub fn new(pos: vec3, pitch: f32, yaw: f32, roll: f32, fov: vec2) -> Camera {
         unsafe {
             let mut buffer_id: GLuint = 0;
 
@@ -74,7 +74,7 @@ impl Camera {
             gl::BindBufferBase(gl::UNIFORM_BUFFER, 0, buffer_id);
 
             let camera = Camera { pos, pitch, yaw, roll, fov, buffer_id, buffer: CameraBuffer {
-                pos, rot: make_yaw_pitch_roll_matrix(yaw, pitch, roll), fov: int(fov)}};
+                pos, rot: make_yaw_pitch_roll_matrix(yaw, pitch, roll), fov}};
 
             return camera;
         }
@@ -90,7 +90,7 @@ impl Camera {
     pub fn update(&mut self) {  // Update data on the gpu
         unsafe {
             self.buffer.pos = self.pos;
-            self.buffer.fov = int(self.fov);
+            self.buffer.fov = self.fov;
             self.buffer.rot = make_yaw_pitch_roll_matrix(self.yaw, self.pitch, self.roll);
             gl::BindBuffer(gl::UNIFORM_BUFFER, self.buffer_id);
             gl::BufferSubData(gl::UNIFORM_BUFFER, 0, size_of::<CameraBuffer>() as GLsizeiptr,
@@ -101,7 +101,7 @@ impl Camera {
 
 impl Default for Camera {
     fn default() -> Camera {
-        return Camera::new(vec3(0.0, 0.0, 0.0), 0.0, 0.0, 0.0, 90)
+        return Camera::new(vec3(0.0, 0.0, 0.0), 0.0, 0.0, 0.0, vec2(90.0, 90.0))
     }
 }
 

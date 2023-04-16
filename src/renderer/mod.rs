@@ -93,7 +93,7 @@ pub(crate) fn run(renderer: Renderer, mut ray_tracer: RayTracer) {
         }
 
         renderer.window.gl_swap_window();
-        //thread::sleep(Duration::from_millis(1));
+        thread::sleep(Duration::from_millis(1));
 
         n_frames += 1;
         if time.elapsed().as_secs() >= 1 {
