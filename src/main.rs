@@ -1,5 +1,3 @@
-extern crate image;
-
 use crate::renderer::{Renderer, run};
 use crate::renderer::ray_tracer::{Camera, RayTracer};
 

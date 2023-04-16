@@ -1,6 +1,7 @@
 extern crate gl;
 extern crate sdl2;
 
+use std::thread;
 use std::time::{Duration, Instant, SystemTime};
 
 use gl::types::{GLenum, GLsizei};
@@ -92,6 +93,7 @@ pub(crate) fn run(renderer: Renderer, mut ray_tracer: RayTracer) {
         }
 
         renderer.window.gl_swap_window();
+        //thread::sleep(Duration::from_millis(1));
 
         n_frames += 1;
         if time.elapsed().as_secs() >= 1 {

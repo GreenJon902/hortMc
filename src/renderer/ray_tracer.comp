@@ -11,63 +11,31 @@ struct Camera {  // For actual use of camera
     float image_plane_distance;
 };
 
-struct Ray {  // We store rays as an x coordinate and 2 line equations - z = my * x + cy, y = mz * x + cz
+struct Ray {
     vec3 pos;
     vec3 dir;
 };
 
-layout(std430) buffer CameraBuffer {
-    float x;
-    float y;
-    float z;
-    float yaw;
-    float pitch;
-    float roll;
+layout (std140) uniform CameraBlock {
+    vec3 camera_pos;
+    mat3 camera_rot_mat;
     int fov;
 } IN;
 
 writeonly uniform image2D outputTexture;
 
 
-mat3 make_yaw_pitch_roll_matrix(float yaw, float pitch, float roll) {
-    yaw = radians(yaw);
-    pitch = radians(pitch);
-    roll = radians(roll);
-    float cosYaw = cos(yaw);
-    float sinYaw = sin(yaw);
-    float cosPitch = cos(pitch);
-    float sinPitch = sin(pitch);
-    float cosRoll = cos(roll);
-    float sinRoll = sin(roll);
-
-    mat3 rotation_matrix;
-    rotation_matrix[0][0] = cosYaw * cosRoll + sinYaw * sinPitch * sinRoll;
-    rotation_matrix[0][1] = sinRoll * cosPitch;
-    rotation_matrix[0][2] = -sinYaw * cosRoll + cosYaw * sinPitch * sinRoll;
-
-    rotation_matrix[1][0] = -cosYaw * sinRoll + sinYaw * sinPitch * cosRoll;
-    rotation_matrix[1][1] = cosRoll * cosPitch;
-    rotation_matrix[1][2] = sinYaw * sinRoll + cosYaw * sinPitch * cosRoll;
-
-    rotation_matrix[2][0] = sinYaw * cosPitch;
-    rotation_matrix[2][1] = -sinPitch;
-    rotation_matrix[2][2] = cosYaw * cosPitch;
-
-    return rotation_matrix;
-}
-
-
 Camera make_camera() {  // From IN
     ivec2 image_size = ivec2(gl_NumWorkGroups.xy);
-
-    mat3 rotation_matrix = make_yaw_pitch_roll_matrix(IN.yaw, IN.pitch, IN.roll);
-    vec3 forward = rotation_matrix * vec3(0.0, 0.0, 1.0);
-    vec3 right = rotation_matrix * vec3(1.0, 0.0, 0.0);
-    vec3 up = rotation_matrix * vec3(0.0, 1.0, 0.0);
+    vec3 forward = IN.camera_rot_mat * vec3(0.0, 0.0, 1.0);
+    vec3 right = IN.camera_rot_mat * vec3(1.0, 0.0, 0.0);
+    vec3 up = IN.camera_rot_mat * vec3(0.0, 1.0, 0.0);
     float image_plane_distance = image_size.y / (2.0 * tan(radians(float(IN.fov)) / 2.0));
 
-    return Camera(vec3(IN.x, IN.y, IN.z), image_size, rotation_matrix, forward, right, up, image_plane_distance);
+    return Camera(IN.camera_pos, image_size, IN.camera_rot_mat, forward, right, up, image_plane_distance);
 }
+
+
 
 Ray make_ray(Camera camera, ivec2 image_pixel_position) {
     vec3 ray_direction = normalize(camera.forward * camera.image_plane_distance  // In view space
@@ -122,6 +90,7 @@ bool collideZFace(vec3 v, float x, float y, float z) {
     return x < v.x && v.x < (x + 1) && y < v.y && v.y < (y + 1) && v.z == z;
 }
 
+
 void main() {
     ivec2 image_pixel_position = ivec2(gl_GlobalInvocationID.xy);  // Our position on image in pixels
 
@@ -131,11 +100,10 @@ void main() {
     for (int i=0; i<10; i++) {
         ray = step_block(ray);
         if (collideXFace(ray.pos, 2, 1, 5) || collideYFace(ray.pos, 2, 1, 5) || collideZFace(ray.pos, 2, 1, 5)) {
-           imageStore(outputTexture, image_pixel_position, vec4(1, 0, 0, 1));
-           break;
+            imageStore(outputTexture, image_pixel_position, vec4(1, 0, 0, 1));
+            break;
         } else {
             imageStore(outputTexture, image_pixel_position, vec4(0, 0, 0, 1));
         }
     }
-    //imageStore(outputTexture, image_pixel_position, vec4(ray.pos, 1));
 }

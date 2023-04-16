@@ -2,7 +2,8 @@ use std::ffi::{c_void, CString};
 use std::mem::size_of;
 use std::ptr;
 
-use gl::types::{GLchar, GLfloat, GLint, GLsizei, GLuint};
+use gl::types::{GLchar, GLfloat, GLint, GLsizei, GLsizeiptr, GLuint};
+use std140::{float, int, mat3x3, vec3};
 
 use crate::renderer::sgl;
 use crate::renderer::shader_storage_buffer::ShaderStorageBuffer;
@@ -11,40 +12,96 @@ use crate::renderer::shader_utils::shader::Shader;
 use crate::renderer::vertex_buffers::VertexBuffers;
 use crate::world::World;
 
-#[allow(dead_code)]
-#[repr(C)]
+fn make_yaw_pitch_roll_matrix(yaw: f32, pitch: f32, roll: f32) -> mat3x3 {
+    let yaw = yaw.to_radians();
+    let pitch = pitch.to_radians();
+    let roll = roll.to_radians();
+
+    let cos_yaw = yaw.cos();
+    let sin_yaw = yaw.sin();
+    let cos_pitch = pitch.cos();
+    let sin_pitch = pitch.sin();
+    let cos_roll = roll.cos();
+    let sin_roll = roll.sin();
+
+    let mut rotation_matrix = mat3x3(
+        vec3(cos_yaw * cos_roll + sin_yaw * sin_pitch * sin_roll,
+             sin_roll * cos_pitch,
+             -sin_yaw * cos_roll + cos_yaw * sin_pitch * sin_roll),
+        vec3(-cos_yaw * sin_roll + sin_yaw * sin_pitch * cos_roll,
+             cos_roll * cos_pitch,
+             sin_yaw * sin_roll + cos_yaw * sin_pitch * cos_roll
+        ),
+        vec3(
+            sin_yaw * cos_pitch,
+            -sin_pitch,
+            cos_yaw * cos_pitch
+        )
+    );
+
+    return rotation_matrix;
+}
+
+#[std140::repr_std140]
+#[derive(Debug)]
+struct CameraBuffer { // All values are duplicates of Camera
+    pos: vec3,
+    rot: mat3x3,
+    fov: int
+}
+
 #[derive(Debug)]
 pub struct Camera {
-    x: f32,
-    y: f32,  // Y is up
-    z: f32,
-    yaw: f32,  // 0,0,0 Would be looking towards positive Z
+    pos: vec3, // Y is up
     pitch: f32,
+    yaw: f32,  // 0,0,0 Would be looking towards positive Z
     roll: f32,
-
     fov: i32,
+
+    buffer_id: GLuint,
+    buffer: CameraBuffer
 }
 
 impl Camera {
+    pub fn new(pos: vec3, pitch: f32, yaw: f32, roll: f32, fov: i32) -> Camera {
+        unsafe {
+            let mut buffer_id: GLuint = 0;
+
+            gl::GenBuffers(1, &mut buffer_id);
+            gl::BindBuffer(gl::UNIFORM_BUFFER, buffer_id);
+            gl::BufferData(gl::UNIFORM_BUFFER, size_of::<CameraBuffer>() as GLsizeiptr, ptr::null(),
+                           gl::DYNAMIC_DRAW);
+            gl::BindBufferBase(gl::UNIFORM_BUFFER, 0, buffer_id);
+
+            let camera = Camera { pos, pitch, yaw, roll, fov, buffer_id, buffer: CameraBuffer {
+                pos, rot: make_yaw_pitch_roll_matrix(yaw, pitch, roll), fov: int(fov)}};
+
+            return camera;
+        }
+    }
+
     pub fn look_rel(&mut self, rel_yaw: f32, rel_pitch: f32, rel_roll: f32) {
         println!("{} {} {}", self.yaw, self.pitch, self.roll);
         self.yaw += rel_yaw;
         self.pitch += rel_pitch;
         self.roll += rel_roll;
     }
+
+    pub fn update(&mut self) {  // Update data on the gpu
+        unsafe {
+            self.buffer.pos = self.pos;
+            self.buffer.fov = int(self.fov);
+            self.buffer.rot = make_yaw_pitch_roll_matrix(self.yaw, self.pitch, self.roll);
+            gl::BindBuffer(gl::UNIFORM_BUFFER, self.buffer_id);
+            gl::BufferSubData(gl::UNIFORM_BUFFER, 0, size_of::<CameraBuffer>() as GLsizeiptr,
+                              ptr::addr_of!(self.buffer) as *const CameraBuffer as *const c_void);
+        }
+    }
 }
 
 impl Default for Camera {
     fn default() -> Camera {
-        return Camera {
-            x: 0.0,
-            y: 0.0,
-            z: 0.0,
-            yaw: 0.0,
-            pitch: 0.0,
-            roll: 0.0,
-            fov: 120
-        }
+        return Camera::new(vec3(0.0, 0.0, 0.0), 0.0, 0.0, 0.0, 90)
     }
 }
 
@@ -61,7 +118,6 @@ pub struct RayTracer {
     render_shader_program: Program,
     vertex_buffers: VertexBuffers,
     texture: GLuint,
-    camera_ssb: ShaderStorageBuffer
 }
 
 impl RayTracer {
@@ -73,12 +129,10 @@ impl RayTracer {
 
         let texture = RayTracer::create_texture(width, height);
         display_shader_program.assign_uniform("Texture", texture as GLint);
-        render_shader_program.assign_uniform("OutputTexture", texture as GLint);
-
-        let camera_ssb = ShaderStorageBuffer::new(&camera);
+        render_shader_program.assign_uniform("outputTexture", texture as GLint);
 
         RayTracer {camera, world, display_shader_program, render_shader_program, vertex_buffers,
-            texture, width, height, camera_ssb}
+            texture, width, height}
     }
 
     fn load_display_shaders() -> Program {  // Displaying texture on screen
@@ -125,7 +179,7 @@ impl RayTracer {
     pub fn draw(&mut self) {  // Draws to fill viewport
         self.render_shader_program.set_used();
         unsafe {
-            self.camera_ssb.update(&self.camera);
+            self.camera.update();
             gl::DispatchCompute(self.width, self.height, 1);
             gl::MemoryBarrier(gl::SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
