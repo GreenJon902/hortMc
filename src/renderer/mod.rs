@@ -5,6 +5,7 @@ use std::thread;
 use std::time::{Duration, Instant, SystemTime};
 
 use gl::types::{GLenum, GLsizei};
+use sdl2::keyboard::Keycode;
 use sdl2::Sdl;
 use sdl2::video::{GLContext, Window};
 
@@ -70,6 +71,14 @@ pub(crate) fn run(renderer: Renderer, mut ray_tracer: RayTracer) {
                 sdl2::event::Event::Quit { .. } => break 'main,
                 sdl2::event::Event::MouseButtonDown { .. } => mouse_down=true,
                 sdl2::event::Event::MouseButtonUp { .. } => mouse_down=false,
+                sdl2::event::Event::KeyDown { keycode, .. }
+                    if keycode.unwrap()==Keycode::W => ray_tracer.camera.move_rel(0., 0., 1.),
+                sdl2::event::Event::KeyDown { keycode, .. }
+                    if keycode.unwrap()==Keycode::A => ray_tracer.camera.move_rel(-1., 0., 0.),
+                sdl2::event::Event::KeyDown { keycode, .. }
+                    if keycode.unwrap()==Keycode::S => ray_tracer.camera.move_rel(0., 0., -1.),
+                sdl2::event::Event::KeyDown { keycode, .. }
+                    if keycode.unwrap()==Keycode::D => ray_tracer.camera.move_rel(1., 0., 0.),
                 sdl2::event::Event::KeyDown { .. } => ray_tracer.camera.look_rel(0., 0., 15.),
                 sdl2::event::Event::MouseMotion { xrel, yrel, .. } if mouse_down == true =>
                     ray_tracer.camera.look_rel(xrel as f32, yrel as f32, 0.),

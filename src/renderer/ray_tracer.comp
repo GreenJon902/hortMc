@@ -15,17 +15,39 @@ layout (std140) uniform CameraBlock {
 writeonly uniform image2D outputTexture;
 
 
-vec3 get_local_ray_direction(vec2 pos, vec2 size) {  // Get the local ray direction. Fov can be infinite
+vec3 get_local_ray_direction(vec2 pos, vec2 size) {  // For when fov is higher than 180. This causes visual distortion
     vec2 angle = (pos / size - 0.5) * radians(fov);
     vec3 dir = vec3(sin(angle.x) * cos(angle.y), sin(angle.y), cos(angle.x) * cos(angle.y));
     return normalize(dir);
+}
+
+#define PI 3.1415926535897932
+vec3 perspective_projection(vec2 pos, vec2 size) {
+    vec2 fov = vec2(90, 90);
+
+    float aspect_ratio = size.x / size.y;
+    float theta_h = fov.x / 2 * PI / 180;
+    float theta_v = fov.y / 2 * PI / 180;
+
+    float ndc_x = (2 * pos.x + 1) / size.x - 1;
+    float ndc_y = 1 - (2 * pos.y + 1) / size.y;
+
+    float tan_theta_h = tan(theta_h);
+    float tan_theta_v = tan(theta_v);
+
+    float distance_ = 0.5 / max(tan_theta_h / aspect_ratio, tan_theta_v);
+
+    vec3 direction_camera = vec3(ndc_x * aspect_ratio * tan_theta_h, -ndc_y * tan_theta_v, 1.0);
+    direction_camera = normalize(direction_camera);
+
+    return normalize(direction_camera);
 }
 
 Ray make_ray() {
     ivec2 image_position = ivec2(gl_GlobalInvocationID.xy);  // pos on image
     ivec2 image_size = ivec2(gl_NumWorkGroups.xy);  // pos on image
 
-    vec3 ray_direction = get_local_ray_direction(image_position, image_size);
+    vec3 ray_direction = perspective_projection(image_position, image_size);
     ray_direction = camera_rot_mat * ray_direction; // apply camera rotation
     ray_direction = normalize(ray_direction);
     return Ray(camera_pos, ray_direction);
@@ -80,37 +102,57 @@ int getInteger(vec3 v) {  // x: 1, y: 2, z: 3, None: 0
       }
 }
 
-// TODO: Actual block pallet, atm just returns an encoded color
-int get_block_at(ivec3 pos, bvec3 back_face) { // Backface means the face on the positive side. reuturn -1 means air
-    //if ((pos + ivec3(back_face)) == ivec3(2, 1, 5)) {
-    //    return 1;
-    //}
-    //return -1;
+uint get_block_at(ivec3 pos) {
+    uint world[10][10][10];  // Initialises to 0s (air)
+    ivec3 world_start = ivec3(-5, -7, -5);  // Offset of world array from 0,0,0
 
-    if (max3(abs(pos + ivec3(back_face))) == 3) {
-        return pos.x * 100 + pos.y * 10 + pos.z;
-    } else {
-        return -1;
+    world[4][4][4] = 2; // Floor
+    world[4][4][5] = 2;
+    world[4][4][6] = 2;
+    world[5][4][4] = 2;
+    world[5][4][5] = 2;
+    world[5][4][6] = 2;
+    world[6][4][4] = 2;
+    world[6][4][5] = 2;
+    world[6][4][6] = 2;
+    world[4][5][7] = 1; // Wall
+    world[5][5][7] = 1;
+    world[6][5][7] = 1;
+    world[4][6][7] = 1;
+    world[5][6][7] = 1;
+    world[6][6][7] = 1;
+    world[4][7][7] = 2;
+    world[5][7][7] = 2;
+    world[6][7][7] = 2;
+
+    pos -= world_start;
+    if (any(lessThan(pos, ivec3(0, 0, 0))) || any(greaterThan(pos, ivec3(9, 9, 9)))) {  // Out of bounds of world
+        return 0;
     }
+    return world[pos.x][pos.y][pos.z];
 }
 
-int checkBlockCollistion (Ray ray) {  // Returns a block id if collided (collided means one coord is int)
+uint checkBlockCollistion (Ray ray) {  // Returns a block id if collided (collided means one coord is int)
     int integer_side = getInteger(ray.pos);
-    return get_block_at(ivec3(trunc(ray.pos)), greaterThan(ray.dir, vec3(0, 0, 0)));
+    return get_block_at(ivec3(floor(ray.pos)));
 }
 
 
 void main() {
     ivec2 image_position = ivec2(gl_GlobalInvocationID.xy);  // Our position on image in pixels
     Ray ray = make_ray();
+
     //imageStore(outputTexture, image_position, vec4(ray.dir, 1));
     //return;
 
+    vec3 pallet[] = {vec3(0, 0, 0), // This is air and doesnt matter
+        vec3(0.5, 0.5, 0.5), vec3(0, 1, 0)};
+
     for (int i=0; i<10; i++) {
         ray = step_block(ray);
-        int block_id = checkBlockCollistion(ray);
-        if (block_id != -1) {
-            imageStore(outputTexture, image_position, vec4((block_id / 100) % 100, (block_id / 10) % 10, block_id % 10, 1));
+        uint block_id = checkBlockCollistion(ray);
+        if (block_id != 0) {  // Goes through air so ignore
+            imageStore(outputTexture, image_position, vec4(pallet[block_id].xyz, 1));
             return;
         }
     }
