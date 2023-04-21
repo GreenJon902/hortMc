@@ -132,9 +132,17 @@ uint get_block_at(ivec3 pos) {
     return world[pos.x][pos.y][pos.z];
 }
 
-uint checkBlockCollistion (Ray ray) {  // Returns a block id if collided (collided means one coord is int)
+uint checkBlockCollistion(Ray ray) {  // Returns a block id if collided (collided means one coord is int)
     int integer_side = getInteger(ray.pos);
-    return get_block_at(ivec3(floor(ray.pos)));
+    ivec3 pos = ivec3(floor(ray.pos));
+    if (integer_side == 1 && ray.dir.x < 0) {
+        pos.x -= 1;
+    } else if (integer_side == 2 && ray.dir.y < 0) {
+        pos.y -= 1;
+    } else if (integer_side == 3 && ray.dir.z < 0) {
+        pos.z -= 1;
+    }
+    return get_block_at(pos);
 }
 
 
