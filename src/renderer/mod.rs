@@ -16,6 +16,7 @@ mod vertex_buffers;
 mod shader_utils;
 pub mod ray_tracer;
 pub mod camera;
+pub mod error_handler;
 
 fn create_texture(width: GLuint, height: GLuint) -> GLuint {
     let mut texture: GLuint = 0;
@@ -89,7 +90,7 @@ pub fn mainloop(mut texture_drawer: TextureDrawer, mut ray_tracer: RayTracer) {
         n_frames += 1;
         if time.elapsed().as_secs() >= 2 {
 
-            println!("\n\n\n\n\n\n\n\nFPS: {}\nevents: {}s\nrender: {}s\ndraw:   {}s",
+            println!("\n\nFPS: {}\nevents: {}s\nrender: {}s\ndraw:   {}s",
                      n_frames as f64 / time.elapsed().as_secs_f64(),
                      (event_time / n_frames) as f64 / (1000000.0),
                      (render_time / n_frames) as f64 / (1000000.0),

@@ -2,6 +2,8 @@ use sdl2::Sdl;
 use sdl2::video;
 use sdl2::video::GLContext;
 
+use crate::renderer::error_handler::setup_error_handler;
+
 pub struct Window {
     pub name: &'static str,
     pub width: u32,
@@ -32,6 +34,8 @@ impl Window {
         let gl_context = window.gl_create_context().unwrap();
         gl::load_with(|s| video_subsystem.gl_get_proc_address(s)
             as *const std::os::raw::c_void);
+
+        setup_error_handler();
 
         video_subsystem.gl_set_swap_interval(0).err();
 
