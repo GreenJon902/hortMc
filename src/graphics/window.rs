@@ -2,7 +2,7 @@ use sdl2::Sdl;
 use sdl2::video;
 use sdl2::video::GLContext;
 
-use crate::renderer::error_handler::setup_error_handler;
+use crate::graphics::error_handler::setup_error_handler;
 
 pub struct Window {
     pub name: &'static str,

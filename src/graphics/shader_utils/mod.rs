@@ -1,7 +1,7 @@
+use std::ffi::CString;
+
 pub mod program;
 pub mod shader;
-
-use std::ffi::CString;
 
 fn create_whitespace_cstring_with_len(len: usize) -> CString {
     // allocate buffer of correct size

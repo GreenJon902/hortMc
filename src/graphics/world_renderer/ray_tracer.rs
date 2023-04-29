@@ -2,10 +2,10 @@ use std::ffi::CString;
 
 use gl::types::GLuint;
 
-use crate::renderer::{sgl, update_texture_binding_point};
-use crate::renderer::camera::Camera;
-use crate::renderer::shader_utils::program::Program;
-use crate::renderer::shader_utils::shader::Shader;
+use crate::graphics::{sgl, update_texture_binding_point};
+use crate::graphics::shader_utils::program::Program;
+use crate::graphics::shader_utils::shader::Shader;
+use crate::graphics::world_renderer::camera::Camera;
 use crate::world::World;
 
 #[allow(dead_code)]

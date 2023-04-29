@@ -2,7 +2,7 @@ use std::ffi::c_void;
 
 use gl::types::{GLsizeiptr, GLuint};
 
-use crate::renderer::sgl;
+use crate::graphics::sgl;
 
 /// Creates vertex information to upload to the gpu for us.
 pub struct VertexBuffers {

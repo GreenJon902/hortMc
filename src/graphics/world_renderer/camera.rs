@@ -5,7 +5,7 @@ use std::ptr;
 use gl::types::{GLsizeiptr, GLuint};
 use std140::{mat3x3, vec2, vec3};
 
-use crate::renderer::sgl;
+use crate::graphics::sgl;
 
 fn make_yaw_pitch_roll_matrix(yaw: f32, pitch: f32, roll: f32) -> mat3x3 {
     let yaw = yaw.to_radians();

@@ -3,7 +3,7 @@ use std::ptr;
 
 use gl::types::{GLchar, GLenum, GLsizei, GLuint};
 
-use crate::renderer::sgl;
+use crate::graphics::sgl;
 
 /// Creates an error handler for opengl errors, requires opengl to already by initialised.
 pub fn setup_error_handler() {

@@ -1,6 +1,7 @@
 use std::ffi::CStr;
-use crate::renderer::sgl;
-use crate::renderer::shader_utils::create_whitespace_cstring_with_len;
+
+use crate::graphics::sgl;
+use crate::graphics::shader_utils::create_whitespace_cstring_with_len;
 
 pub struct Shader {
     id: gl::types::GLuint,

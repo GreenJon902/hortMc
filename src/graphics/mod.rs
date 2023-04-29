@@ -6,16 +6,14 @@ use gl::types::{GLint, GLsizei, GLuint};
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 
-use crate::renderer::ray_tracer::RayTracer;
-use crate::renderer::texture_drawer::TextureDrawer;
+use crate::graphics::screen_copier::texture_drawer::TextureDrawer;
+use crate::graphics::world_renderer::ray_tracer::RayTracer;
 
-pub mod texture_drawer;
+pub mod screen_copier;
 mod sgl;
 mod window;
-mod vertex_buffers;
 mod shader_utils;
-pub mod ray_tracer;
-pub mod camera;
+pub mod world_renderer;
 pub mod error_handler;
 
 fn create_texture(width: GLuint, height: GLuint) -> GLuint {

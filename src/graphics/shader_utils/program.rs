@@ -1,8 +1,8 @@
 use gl::types::GLint;
 
-use crate::renderer::sgl;
-use crate::renderer::shader_utils::create_whitespace_cstring_with_len;
-use crate::renderer::shader_utils::shader::Shader;
+use crate::graphics::sgl;
+use crate::graphics::shader_utils::create_whitespace_cstring_with_len;
+use crate::graphics::shader_utils::shader::Shader;
 
 pub struct Program {
     id: gl::types::GLuint,

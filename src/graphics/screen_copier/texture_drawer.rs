@@ -4,11 +4,11 @@ use std::ptr;
 use gl::types::GLuint;
 use sdl2::EventPump;
 
-use crate::renderer::{sgl, update_texture_binding_point};
-use crate::renderer::shader_utils::program::Program;
-use crate::renderer::shader_utils::shader::Shader;
-use crate::renderer::vertex_buffers::VertexBuffers;
-use crate::renderer::window::Window;
+use crate::graphics::{sgl, update_texture_binding_point};
+use crate::graphics::screen_copier::vertex_buffers::VertexBuffers;
+use crate::graphics::shader_utils::program::Program;
+use crate::graphics::shader_utils::shader::Shader;
+use crate::graphics::window::Window;
 
 pub struct TextureDrawer {
     window: Window,

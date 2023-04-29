@@ -6,7 +6,7 @@ use std::ffi::{c_char, c_void};
 use gl::types::{GLbitfield, GLboolean, GLchar, GLDEBUGPROC, GLenum, GLint, GLintptr, GLsizei,
                 GLsizeiptr, GLuint};
 
-use crate::renderer::shader_utils::shader::Shader;
+use crate::graphics::shader_utils::shader::Shader;
 
 pub fn CreateProgram() -> GLuint {
     unsafe {
