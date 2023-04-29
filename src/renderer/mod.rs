@@ -81,6 +81,7 @@ pub fn mainloop(mut texture_drawer: TextureDrawer, mut ray_tracer: RayTracer) {
 
         render_time -= time.elapsed().as_micros() as i128;
         ray_tracer.render_to(texture, size.0, size.1);
+        sgl::Finish();  // For timer
         render_time += time.elapsed().as_micros() as i128;
         draw_time -= time.elapsed().as_micros() as i128;
         texture_drawer.draw(texture);

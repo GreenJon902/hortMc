@@ -247,3 +247,9 @@ pub fn DebugMessageCallback(callback: GLDEBUGPROC, userparam: *const c_void) {
         gl::DebugMessageCallback(callback, userparam);
     };
 }
+
+pub fn Finish() {
+    unsafe {
+        gl::Finish();
+    };
+}
