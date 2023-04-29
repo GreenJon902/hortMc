@@ -25,12 +25,12 @@ impl TextureDrawer {
         TextureDrawer {window, shader_program, vertex_buffers}
     }
 
-    fn load_shaders() -> Program {  // Displaying texture on screen
+    fn load_shaders() -> Program {
         let vert_shader =
-            Shader::from_vert_source(&CString::new(include_str!("ray_tracer.vert")).unwrap())
+            Shader::from_vert_source(&CString::new(include_str!("texture_drawer.vert")).unwrap())
                 .unwrap();
         let frag_shader =
-            Shader::from_frag_source(&CString::new(include_str!("ray_tracer.frag")).unwrap())
+            Shader::from_frag_source(&CString::new(include_str!("texture_drawer.frag")).unwrap())
                 .unwrap();
 
         let shader_program = Program::from_shaders(
@@ -58,12 +58,13 @@ impl TextureDrawer {
 
 
     pub fn draw(&mut self, texture: GLuint) {
+        self.shader_program.set_used();
+        
         update_texture_binding_point(texture, 0);
 
         sgl::Clear(gl::COLOR_BUFFER_BIT);
         unsafe { gl::ClearColor(0.1, 0.2, 0.3, 1.); }
-
-        self.shader_program.set_used();
+        
         sgl::BindVertexArray(self.vertex_buffers.vao);
         sgl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.vertex_buffers.ebo);
         sgl::DrawElements(

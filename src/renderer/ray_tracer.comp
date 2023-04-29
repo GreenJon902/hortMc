@@ -190,31 +190,6 @@ void main() {
             collision_materials[i] = pallet[block_id];
             i += 1;
             if (i >= max_collisions) break;
-            //if (fract(ray.pos.z) == 0) {
-                /*vec3 n = vec3(equal(fract(ray.pos), vec3(0, 0, 0)));
-                vec3 i = ray.dir;
-                ray.dir = i - 2 * (dot(n, i)) * n;
-                ray.dir = ray.dir + pallet[block_id].specularity * (max(vec3(0), camera_pos));*/
-
-                // ray.dir.z *= (-1 * vec3(equal(fract(ray.pos), vec3(0, 0, 0)))).z + pallet[block_id].specularity * pow(randomVectorBetweenOnes(), vec3(3)).z * 45;
-                /*vec3 N = vec3(0, 0, -1);
-                vec3 L = ray.dir;
-                vec3 R = 2 * N * (N * L) - L;
-                vec3 V = -L;
-                vec3 H = normalize(L + V);
-                float specular = pow(max(dot(N, H), 0.0), pallet[block_id].shininess);
-                R = mix(R, H, specular * pallet[block_id].specularity);
-                ray.dir = normalize(R);*/
-                /*vec3 normal = (normalize(
-                    vec3(equal(fract(ray.pos), vec3(0, 0, 0))) * vec3(greaterThan(ray.dir, vec3(0, 0, 0)))
-                ) + 0.5)* -2;  // Normal on plane that collided with
-
-                vec3 diffuseDir = normalize(normal + RandomDirection());
-                //diffuseDir = ray.dir;
-                //diffuseDir.z *= -1;
-                vec3 specularDir = normalize(ray.dir * (-2 * vec3(equal(fract(ray.pos), vec3(0, 0, 0))) + 1));
-                ray.dir = normalize(mix(diffuseDir, specularDir, pallet[block_id].smoothness));*/
-
                 bool isSpecularBounce = collision_materials[i].specularProbability >= RandomValue(rngState);
 
                 vec3 diffuseDir = normalize(-vec3(equal(fract(ray.pos), vec3(0, 0, 0))) + RandomDirection(rngState));
@@ -237,68 +212,3 @@ void main() {
     imageStore(outputTexture, image_position, vec4(color, 1));
     //imageStore(outputTexture, image_position, vec4(RandomDirection(), 1));
 }
-
-
-
-/*
-vec3 equi_angular_projection(vec2 pos, vec2 size) { // Image coorinates to local ray direction.
-                                                  // Supports infinite fov (horizontal).
-    vec2 ndc = vec2(2.0 * pos.x / size.x - 1.0, 2.0 * pos.y / size.y - 1.0);
-
-    float r = length(ndc);
-    float phi = atan(r * tan(radians(float(fov)) / 2.0));
-
-    vec3 dir = vec3(ndc, cos(phi));
-    return normalize(dir);
-}
-
-
-vec3 cube_map_projection(vec2 pos, vec2 size) {
-    vec2 fov = vec2(720, 90);
-
-    vec2 uv = (pos + 0.5) / size;
-    float aspect_ratio = size.x / size.y;
-    float ndc_x = (2.0 * uv.x - 1.0) * aspect_ratio;
-    float ndc_y = 1.0 - 2.0 * uv.y;
-
-    vec2 tan_half_fov = tan(fov / 2);
-    vec3 dir = normalize(vec3(ndc_x * tan_half_fov.x, ndc_y * -tan_half_fov.y, 1.0));
-    return dir;
-}
-
-vec3 sphere_map_projection(vec2 pos, vec2 size) {
-    vec2 fov = vec2(radians(90.), radians(90.));
-
-    // Calculate angle away from camera forward (but camera local)
-    float theta_x = (2 * atan(tan(fov.x / 2) * (pos.x - (size.x / 2)) / (size.x / 2))) - (fov.x / 2);
-    float theta_y = (2 * atan(tan(fov.y / 2) * ((size.y / 2) - pos.y) / (size.y / 2))) - (fov.y / 2);
-
-    float dir_x = sin(theta_x) * cos(theta_y);
-    float dir_y = sin(theta_y);
-    float dir_z = cos(theta_x) * cos(theta_y);
-    vec3 dir = vec3(dir_x, dir_y, dir_z);
-    return normalize(dir);
-}
-
-#define PI 3.1415926535897932
-vec3 perspective_projection(vec2 pos, vec2 size) {
-    vec2 fov = vec2(360, 90);
-
-    float aspect_ratio = size.x / size.y;
-    float theta_h = fov.x / 2 * PI / 180;
-    float theta_v = fov.y / 2 * PI / 180;
-
-    float ndc_x = (2 * pos.x + 1) / size.x - 1;
-    float ndc_y = 1 - (2 * pos.y + 1) / size.y;
-
-    float tan_theta_h = tan(theta_h);
-    float tan_theta_v = tan(theta_v);
-
-    float distance_ = 0.5 / max(tan_theta_h / aspect_ratio, tan_theta_v);
-
-    vec3 direction_camera = vec3(ndc_x * aspect_ratio * tan_theta_h, -ndc_y * tan_theta_v, 1.0);
-    direction_camera = normalize(direction_camera);
-
-    return normalize(direction_camera);
-}
-*/
