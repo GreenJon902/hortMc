@@ -3,12 +3,12 @@ use std::ptr;
 
 use gl::types::{GLchar, GLenum, GLsizei, GLuint};
 
+use crate::renderer::sgl;
+
 /// Creates an error handler for opengl errors, requires opengl to already by initialised.
 pub fn setup_error_handler() {
-    unsafe {
-        gl::Enable(gl::DEBUG_OUTPUT);
-        gl::DebugMessageCallback(Some(error), ptr::null());
-    }
+    sgl::Enable(gl::DEBUG_OUTPUT);
+    sgl::DebugMessageCallback(Some(error), ptr::null());
 }
 
 /// Prints opengl errors to the console.

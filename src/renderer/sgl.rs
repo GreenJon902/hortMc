@@ -3,7 +3,8 @@
 
 use std::ffi::{c_char, c_void};
 
-use gl::types::{GLbitfield, GLboolean, GLchar, GLenum, GLint, GLintptr, GLsizei, GLsizeiptr, GLuint};
+use gl::types::{GLbitfield, GLboolean, GLchar, GLDEBUGPROC, GLenum, GLint, GLintptr, GLsizei,
+                GLsizeiptr, GLuint};
 
 use crate::renderer::shader_utils::shader::Shader;
 
@@ -85,7 +86,8 @@ pub fn GetShaderiv(id: GLuint, pname: GLenum, params: *mut GLint) {
     }
 }
 
-pub fn GetShaderInfoLog(shader: GLuint, buf_size: GLsizei, length: *mut GLsizei, info_log: *mut GLchar) {
+pub fn GetShaderInfoLog(shader: GLuint, buf_size: GLsizei, length: *mut GLsizei,
+                        info_log: *mut GLchar) {
     unsafe {
         gl::GetShaderInfoLog(shader, buf_size, length, info_log);
     }
@@ -121,7 +123,8 @@ pub fn BufferData(target: GLenum, size: GLsizeiptr, data: *const c_void, usage: 
     }
 }
 
-pub fn VertexAttribPointer(index: GLuint, size: GLint, type_: GLenum, normalized: GLboolean, stride: GLsizei, pointer: *const c_void) {
+pub fn VertexAttribPointer(index: GLuint, size: GLint, type_: GLenum, normalized: GLboolean,
+                           stride: GLsizei, pointer: *const c_void) {
     unsafe {
         gl::VertexAttribPointer(index, size, type_, normalized, stride, pointer);
     }
@@ -202,7 +205,8 @@ pub fn ActiveTexture(texture: GLenum) {
     };
 }
 
-pub fn BindImageTexture(unit: GLuint, texture: GLuint, level: GLint, layered: GLboolean, layer: GLint, access: GLenum, format: GLenum) {
+pub fn BindImageTexture(unit: GLuint, texture: GLuint, level: GLint, layered: GLboolean,
+                        layer: GLint, access: GLenum, format: GLenum) {
     unsafe {
         gl::BindImageTexture(unit, texture, level, layered, layer, access, format);
     };
@@ -229,5 +233,17 @@ pub fn BindBufferBase(target: GLenum, index: GLuint, buffer: GLuint) {
 pub fn BufferSubData(target: GLenum, offset: GLintptr, size: GLsizeiptr, data: *const c_void) {
     unsafe {
         gl::BufferSubData(target, offset, size, data);
+    };
+}
+
+pub fn Enable(types: GLenum) {
+    unsafe {
+        gl::Enable(types);
+    };
+}
+
+pub fn DebugMessageCallback(callback: GLDEBUGPROC, userparam: *const c_void) {
+    unsafe {
+        gl::DebugMessageCallback(callback, userparam);
     };
 }
