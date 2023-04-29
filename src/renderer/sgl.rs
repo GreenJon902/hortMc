@@ -1,7 +1,11 @@
-use std::ffi::{c_char, c_void};
-use gl::types::{GLbitfield, GLboolean, GLchar, GLenum, GLint, GLsizei, GLsizeiptr, GLuint};
-use crate::renderer::shader_utils::shader::Shader;
+#![allow(non_snake_case)]
+#![allow(dead_code)]
 
+use std::ffi::{c_char, c_void};
+
+use gl::types::{GLbitfield, GLboolean, GLchar, GLenum, GLint, GLsizei, GLsizeiptr, GLuint};
+
+use crate::renderer::shader_utils::shader::Shader;
 
 pub fn CreateProgram() -> GLuint {
     unsafe {

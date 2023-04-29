@@ -3,12 +3,12 @@ use sdl2::video;
 use sdl2::video::GLContext;
 
 pub struct Window {
-    name: &'static str,
-    pub(crate) width: u32,
-    pub(crate) height: u32,
-    pub(crate) sdl: Sdl,
-    pub(crate) window: video::Window,
-    gl_context: GLContext,
+    pub name: &'static str,
+    pub width: u32,
+    pub height: u32,
+    pub sdl: Sdl,
+    pub window: video::Window,
+    pub gl_context: GLContext,
 }
 
 impl Window {

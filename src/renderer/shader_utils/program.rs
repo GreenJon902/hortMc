@@ -47,11 +47,6 @@ impl Program {
     pub fn set_used(&self) {
         sgl::UseProgram(self.id);
     }
-
-    pub fn assign_uniform(&self, name: &str, data: GLint) {
-        self.set_used();
-        sgl::Uniform1i(sgl::GetUniformLocation(self.id, name), data);
-    }
 }
 
 impl Drop for Program {
