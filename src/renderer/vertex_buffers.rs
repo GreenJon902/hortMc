@@ -4,6 +4,7 @@ use gl::types::GLuint;
 
 use crate::renderer::sgl;
 
+/// Creates vertex information to upload to the gpu for us.
 pub struct VertexBuffers {
     pub vbo: GLuint,  // The thing that puts it on the gpu?
     pub vao: GLuint,  // Vertexes

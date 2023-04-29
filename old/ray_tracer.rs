@@ -144,10 +144,10 @@ impl RayTracer {
 
     fn load_display_shaders() -> Program {  // Displaying texture on screen
         let vert_shader =
-            Shader::from_vert_source(&CString::new(include_str!("ray_tracer.vert")).unwrap())
+            Shader::from_vert_source(&CString::new(include_str!("../src/renderer/ray_tracer.vert")).unwrap())
                 .unwrap();
         let frag_shader =
-            Shader::from_frag_source(&CString::new(include_str!("ray_tracer.frag")).unwrap())
+            Shader::from_frag_source(&CString::new(include_str!("../src/renderer/ray_tracer.frag")).unwrap())
                 .unwrap();
 
         let shader_program = Program::from_shaders(

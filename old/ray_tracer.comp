@@ -19,7 +19,7 @@ layout (std140) uniform CameraBlock {
     vec2 fov;
 };
 
-writeonly uniform image2D outputTexture;
+layout (binding=0) writeonly uniform image2D outputTexture;
 
 
 vec3 get_local_ray_direction(vec2 pos, vec2 size) {  // For when fov is higher than 180. This causes visual distortion

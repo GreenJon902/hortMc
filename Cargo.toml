@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 gl = "0.14.0"
 std140 = "0.2.6"
+image = "0.24.6"
 
 [dependencies.sdl2]
 version = "0.35.2"

@@ -1,14 +1,9 @@
-use crate::renderer::{Renderer, run};
-use crate::renderer::ray_tracer::{Camera, RayTracer};
+use crate::renderer::texture_drawer::TextureDrawer;
 
 mod renderer;
-mod world;
-
-
 
 fn main() {
-    let renderer = Renderer::new("Game", 900, 900);
-    let ray_tracer = RayTracer::new(Default::default(), Default::default(), 500, 500);
+    let texture_drawer = TextureDrawer::new("Game", 900, 900);
 
-    run(renderer, ray_tracer)
+    renderer::mainloop(texture_drawer);
 }
