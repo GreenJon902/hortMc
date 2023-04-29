@@ -74,14 +74,14 @@ impl Camera {
     }
 
     pub fn look_rel(&mut self, rel_yaw: f32, rel_pitch: f32, rel_roll: f32) {
-        println!("rot {} {} {}", self.yaw, self.pitch, self.roll);
+        //println!("rot {} {} {}", self.yaw, self.pitch, self.roll);
         self.yaw += rel_yaw;
         self.pitch += rel_pitch;
         self.roll += rel_roll;
     }
 
     pub fn move_rel(&mut self, rel_x: f32, rel_y: f32, rel_z: f32) {
-        println!("pos {} {} {}", self.pos.0, self.pos.1, self.pos.2);
+        //println!("pos {} {} {}", self.pos.0, self.pos.1, self.pos.2);
         self.pos.0 += rel_x;
         self.pos.1 += rel_y;
         self.pos.2 += rel_z;
