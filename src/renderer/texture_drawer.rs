@@ -59,12 +59,11 @@ impl TextureDrawer {
 
     pub fn draw(&mut self, texture: GLuint) {
         self.shader_program.set_used();
-        
+
         update_texture_binding_point(texture, 0);
 
         sgl::Clear(gl::COLOR_BUFFER_BIT);
-        unsafe { gl::ClearColor(0.1, 0.2, 0.3, 1.); }
-        
+
         sgl::BindVertexArray(self.vertex_buffers.vao);
         sgl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.vertex_buffers.ebo);
         sgl::DrawElements(

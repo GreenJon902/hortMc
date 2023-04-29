@@ -5,6 +5,8 @@ use std::ptr;
 use gl::types::{GLsizeiptr, GLuint};
 use std140::{mat3x3, vec2, vec3};
 
+use crate::renderer::sgl;
+
 fn make_yaw_pitch_roll_matrix(yaw: f32, pitch: f32, roll: f32) -> mat3x3 {
     let yaw = yaw.to_radians();
     let pitch = pitch.to_radians();
@@ -57,20 +59,18 @@ pub struct Camera {
 
 impl Camera {
     pub fn new(pos: vec3, pitch: f32, yaw: f32, roll: f32, fov: vec2) -> Camera {
-        unsafe {
-            let mut buffer_id: GLuint = 0;
+        let mut buffer_id: GLuint = 0;
 
-            gl::GenBuffers(1, &mut buffer_id);
-            gl::BindBuffer(gl::UNIFORM_BUFFER, buffer_id);
-            gl::BufferData(gl::UNIFORM_BUFFER, size_of::<CameraBuffer>() as GLsizeiptr, ptr::null(),
-                           gl::DYNAMIC_DRAW);
-            gl::BindBufferBase(gl::UNIFORM_BUFFER, 0, buffer_id);
+        sgl::GenBuffers(1, &mut buffer_id);
+        sgl::BindBuffer(gl::UNIFORM_BUFFER, buffer_id);
+        sgl::BufferData(gl::UNIFORM_BUFFER, size_of::<CameraBuffer>() as GLsizeiptr, ptr::null(),
+                       gl::DYNAMIC_DRAW);
+        sgl::BindBufferBase(gl::UNIFORM_BUFFER, 0, buffer_id);
 
-            let camera = Camera { pos, pitch, yaw, roll, fov, buffer_id, buffer: CameraBuffer {
-                pos, rot: make_yaw_pitch_roll_matrix(yaw, pitch, roll), fov}};
+        let camera = Camera { pos, pitch, yaw, roll, fov, buffer_id, buffer: CameraBuffer {
+            pos, rot: make_yaw_pitch_roll_matrix(yaw, pitch, roll), fov}};
 
-            return camera;
-        }
+        return camera;
     }
 
     pub fn look_rel(&mut self, rel_yaw: f32, rel_pitch: f32, rel_roll: f32) {
@@ -88,14 +88,12 @@ impl Camera {
     }
 
     pub fn update(&mut self) {  // Update data on the gpu
-        unsafe {
-            self.buffer.pos = self.pos;
-            self.buffer.fov = self.fov;
-            self.buffer.rot = make_yaw_pitch_roll_matrix(self.yaw, self.pitch, self.roll);
-            gl::BindBuffer(gl::UNIFORM_BUFFER, self.buffer_id);
-            gl::BufferSubData(gl::UNIFORM_BUFFER, 0, size_of::<CameraBuffer>() as GLsizeiptr,
-                              ptr::addr_of!(self.buffer) as *const CameraBuffer as *const c_void);
-        }
+        self.buffer.pos = self.pos;
+        self.buffer.fov = self.fov;
+        self.buffer.rot = make_yaw_pitch_roll_matrix(self.yaw, self.pitch, self.roll);
+        sgl::BindBuffer(gl::UNIFORM_BUFFER, self.buffer_id);
+        sgl::BufferSubData(gl::UNIFORM_BUFFER, 0, size_of::<CameraBuffer>() as GLsizeiptr,
+                           ptr::addr_of!(self.buffer) as *const CameraBuffer as *const c_void);
     }
 }
 

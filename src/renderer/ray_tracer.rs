@@ -2,10 +2,10 @@ use std::ffi::CString;
 
 use gl::types::GLuint;
 
+use crate::renderer::{sgl, update_texture_binding_point};
 use crate::renderer::camera::Camera;
 use crate::renderer::shader_utils::program::Program;
 use crate::renderer::shader_utils::shader::Shader;
-use crate::renderer::update_texture_binding_point;
 use crate::world::World;
 
 #[allow(dead_code)]
@@ -38,10 +38,8 @@ impl RayTracer {
 
         update_texture_binding_point(texture, 0);
 
-        unsafe {
-            self.camera.update();
-            gl::DispatchCompute(width, height, 1);
-            gl::MemoryBarrier(gl::SHADER_IMAGE_ACCESS_BARRIER_BIT);
-        }
+        self.camera.update();
+        sgl::DispatchCompute(width, height, 1);
+        sgl::MemoryBarrier(gl::SHADER_IMAGE_ACCESS_BARRIER_BIT);
     }
 }

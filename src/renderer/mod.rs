@@ -19,35 +19,29 @@ pub mod camera;
 
 fn create_texture(width: GLuint, height: GLuint) -> GLuint {
     let mut texture: GLuint = 0;
-    unsafe {
-        gl::GenTextures(1, &mut texture);
-        gl::BindTexture(gl::TEXTURE_2D, texture);
-        // set the texture wrapping parameters
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE as GLint);
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE as GLint);
-        // set texture filtering parameters
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as GLint);
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as GLint);
+    sgl::GenTextures(1, &mut texture);
+    sgl::BindTexture(gl::TEXTURE_2D, texture);
+    // set the texture wrapping parameters
+    sgl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE as GLint);
+    sgl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE as GLint);
+    // set texture filtering parameters
+    sgl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as GLint);
+    sgl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as GLint);
 
-        gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGBA32F as GLint,
-                       width as GLsizei, height as GLsizei, 0, gl::RGBA, gl::FLOAT,
-                       0 as *const c_void);
+    sgl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGBA32F as GLint,
+                   width as GLsizei, height as GLsizei, 0, gl::RGBA, gl::FLOAT,
+                   0 as *const c_void);
+    return texture;
 
-        return texture;
-    }
 }
 
 fn update_texture_binding_point(texture: GLuint, binding: GLuint) {
-    unsafe {
-        gl::ActiveTexture(gl::TEXTURE0 + binding);
-        gl::BindTexture(gl::TEXTURE_2D, texture);
-        gl::BindImageTexture(binding, texture, 0, gl::FALSE, 0, gl::READ_WRITE, gl::RGBA32F);
-    }
+    sgl::ActiveTexture(gl::TEXTURE0 + binding);
+    sgl::BindTexture(gl::TEXTURE_2D, texture);
+    sgl::BindImageTexture(binding, texture, 0, gl::FALSE, 0, gl::READ_WRITE, gl::RGBA32F);
 }
 
 pub fn mainloop(mut texture_drawer: TextureDrawer, mut ray_tracer: RayTracer) {
-    /*sgl::Viewport(10, 10, (renderer.width - 20) as GLsizei,
-                  (renderer.height - 20) as GLsizei);  // We want a border */
     let size = texture_drawer.get_size();
     sgl::Viewport(0, 0, size.0 as GLsizei, size.1 as GLsizei);
 

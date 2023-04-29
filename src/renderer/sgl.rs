@@ -3,7 +3,7 @@
 
 use std::ffi::{c_char, c_void};
 
-use gl::types::{GLbitfield, GLboolean, GLchar, GLenum, GLint, GLsizei, GLsizeiptr, GLuint};
+use gl::types::{GLbitfield, GLboolean, GLchar, GLenum, GLint, GLintptr, GLsizei, GLsizeiptr, GLuint};
 
 use crate::renderer::shader_utils::shader::Shader;
 
@@ -115,7 +115,7 @@ pub fn BindBuffer(target: GLenum, buffer: GLuint) {
     }
 }
 
-pub fn BufferData(target: GLenum, size: usize, data: *const c_void, usage: GLenum) {
+pub fn BufferData(target: GLenum, size: GLsizeiptr, data: *const c_void, usage: GLenum) {
     unsafe {
         gl::BufferData(target, size as GLsizeiptr, data, usage);
     }
@@ -167,4 +167,67 @@ pub fn GetUniformLocation(program_id: GLuint, name: &str) -> GLint {
     unsafe {
         return gl::GetUniformLocation(program_id, name.as_ptr() as *const GLchar);
     }
+}
+
+pub fn GenTextures(types: GLsizei, textures: &mut GLuint) {
+    unsafe {
+        gl::GenTextures(types, textures);
+    };
+}
+
+pub fn BindTexture(target: GLenum, texture: GLuint) {
+    unsafe {
+        gl::BindTexture(target, texture);
+    };
+}
+
+pub fn TexParameteri(target: GLenum, pname: GLenum, param: GLint) {
+    unsafe {
+        gl::TexParameteri(target, pname, param);
+    };
+}
+
+pub fn TexImage2D(target: GLenum, level: GLint, internal_format: GLint, width: GLsizei,
+                  height: GLsizei, border: GLint, format: GLenum, type_: GLenum,
+                  pixels: *const c_void) {
+    unsafe {
+        gl::TexImage2D(target, level, internal_format, width, height, border, format,
+                       type_, pixels);
+    };
+}
+
+pub fn ActiveTexture(texture: GLenum) {
+    unsafe {
+        gl::ActiveTexture(texture);
+    };
+}
+
+pub fn BindImageTexture(unit: GLuint, texture: GLuint, level: GLint, layered: GLboolean, layer: GLint, access: GLenum, format: GLenum) {
+    unsafe {
+        gl::BindImageTexture(unit, texture, level, layered, layer, access, format);
+    };
+}
+
+pub fn DispatchCompute(num_groups_x: GLuint, num_groups_y: GLuint, num_groups_z: GLuint) {
+    unsafe {
+        gl::DispatchCompute(num_groups_x, num_groups_y, num_groups_z);
+    };
+}
+
+pub fn MemoryBarrier(barriers: GLbitfield) {
+    unsafe {
+        gl::MemoryBarrier(barriers);
+    };
+}
+
+pub fn BindBufferBase(target: GLenum, index: GLuint, buffer: GLuint) {
+    unsafe {
+        gl::BindBufferBase(target, index, buffer);
+    };
+}
+
+pub fn BufferSubData(target: GLenum, offset: GLintptr, size: GLsizeiptr, data: *const c_void) {
+    unsafe {
+        gl::BufferSubData(target, offset, size, data);
+    };
 }
