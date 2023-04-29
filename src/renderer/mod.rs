@@ -97,6 +97,10 @@ pub fn mainloop(mut texture_drawer: TextureDrawer, mut ray_tracer: RayTracer) {
 
             time = Instant::now();
             n_frames = 0;
+
+            event_time = 0;
+            render_time = 0;
+            draw_time = 0;
         };
     }
 }
