@@ -52,11 +52,11 @@ pub fn mainloop(mut texture_drawer: TextureDrawer, mut ray_tracer: RayTracer) {
 
     let mut n_frames = 0;
     let mut time = Instant::now();
-    let mut event_time: i64 = 0;
-    let mut render_time: i64 = 0;
-    let mut draw_time: i64 = 0;
+    let mut event_time: i128 = 0;
+    let mut render_time: i128 = 0;
+    let mut draw_time: i128 = 0;
     'main: loop {
-        event_time -= time.elapsed().as_nanos() as i64;
+        event_time -= time.elapsed().as_micros() as i128;
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit { .. } => break 'main,
@@ -76,24 +76,24 @@ pub fn mainloop(mut texture_drawer: TextureDrawer, mut ray_tracer: RayTracer) {
                 _ => {}
             }
         }
-        event_time += time.elapsed().as_nanos() as i64;
+        event_time += time.elapsed().as_micros() as i128;
 
-        render_time -= time.elapsed().as_nanos() as i64;
+        render_time -= time.elapsed().as_micros() as i128;
         ray_tracer.render_to(texture, size.0, size.1);
-        render_time += time.elapsed().as_nanos() as i64;
-        draw_time -= time.elapsed().as_nanos() as i64;
+        render_time += time.elapsed().as_micros() as i128;
+        draw_time -= time.elapsed().as_micros() as i128;
         texture_drawer.draw(texture);
-        draw_time += time.elapsed().as_nanos() as i64;
+        draw_time += time.elapsed().as_micros() as i128;
 
-        thread::sleep(Duration::from_millis(1));
+        thread::sleep(Duration::from_millis(10));
         n_frames += 1;
         if time.elapsed().as_secs() >= 2 {
 
             println!("\n\n\n\n\n\n\n\nFPS: {}\nevents: {}s\nrender: {}s\ndraw:   {}s",
                      n_frames as f64 / time.elapsed().as_secs_f64(),
-                     (event_time / n_frames) as f64 / (1000000000.0),
-                     (render_time / n_frames) as f64 / (1000000000.0),
-                     (draw_time / n_frames) as f64 / (1000000000.0));
+                     (event_time / n_frames) as f64 / (1000000.0),
+                     (render_time / n_frames) as f64 / (1000000.0),
+                     (draw_time / n_frames) as f64 / (1000000.0));
 
             time = Instant::now();
             n_frames = 0;
