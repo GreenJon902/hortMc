@@ -117,7 +117,7 @@ pub fn BindBuffer(target: GLenum, buffer: GLuint) {
 
 pub fn BufferData(target: GLenum, size: GLsizeiptr, data: *const c_void, usage: GLenum) {
     unsafe {
-        gl::BufferData(target, size as GLsizeiptr, data, usage);
+        gl::BufferData(target, size, data, usage);
     }
 }
 

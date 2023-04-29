@@ -1,6 +1,6 @@
 use std::ffi::c_void;
 
-use gl::types::GLuint;
+use gl::types::{GLsizeiptr, GLuint};
 
 use crate::renderer::sgl;
 
@@ -20,7 +20,7 @@ impl VertexBuffers {
         sgl::BindBuffer(gl::ARRAY_BUFFER, vbo);
         sgl::BufferData(
             gl::ARRAY_BUFFER,
-            vertices.len() * std::mem::size_of::<f32>(),  // size of data in bytes
+            (vertices.len() * std::mem::size_of::<f32>()) as GLsizeiptr,  // size of data in bytes
             vertices.as_ptr() as *const gl::types::GLvoid,  // pointer to data
             gl::STATIC_DRAW,  // usage
         );
@@ -55,7 +55,7 @@ impl VertexBuffers {
         sgl::GenBuffers(1, &mut ebo);
         sgl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
         sgl::BufferData(gl::ELEMENT_ARRAY_BUFFER,
-                        indices.len() * std::mem::size_of::<u32>(),
+                        (indices.len() * std::mem::size_of::<u32>()) as GLsizeiptr,
                         indices.as_ptr() as *const c_void,
                         gl::STATIC_DRAW);
 
